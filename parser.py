@@ -1,28 +1,17 @@
 '''Version 0.35'''
 
 import json
-import pandas as pd
-import config
-from configparser import ConfigParser
+from bs4 import BeautifulSoup
+import requests
 
-import import_ipynb
+
 import nltk
 from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
-
-
-import nltk 
 import nltk.data
-from nltk.tokenize import TweetTokenizer
-from nltk.tokenize import word_tokenize
 
-
-import nltk
-
-
-
-import ssl
+"""import ssl
 
 ##this made nltk.pos_tag and word_tokenize work for me
 try:
@@ -32,7 +21,7 @@ except AttributeError:
 else:
     ssl._create_default_https_context = _create_unverified_https_context
 nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt')
+nltk.download('punkt')"""
 
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
@@ -54,9 +43,34 @@ class Ingredient:
         self.prep=prep
 
 
-def fetch_recipe(url):
-    data = []
-    #do stuff here
+def fetch_recipe(link):
+    html = requests.get(url = link).text
+    soup = BeautifulSoup(html, 'html.parser')
+
+#grab raw html elements for relevant sections
+    ingredientsRaw = soup.find_all("span", {"class": "ingredients-item-name"})
+    timingAndServingsRaw = soup.find_all("div", {"class": "recipe-meta-item-body elementFont__subtitle"}) #WIP - total time and # servings that recipe makes
+    stepsRaw = [a for a in (td.find_all('p') for td in soup.findAll("ul", {"class": "instructions-section"})) if a]
+ 
+
+#grab text from html elements
+    ingredients = []
+    for x in ingredientsRaw:
+        ingredients.append(x.contents[0])
+
+    print("Ingredients List")
+    for x in ingredients:
+        print(x)
+
+    steps = []
+    for x in stepsRaw[0]: 
+        steps.append(x.contents[0])
+
+    for x in range(0,len(steps)):
+        print("Step", x+1, ":", steps[x])
+
+
+    data = {"ingredients": ingredients, "steps": steps}
     return data
 
 def parse_data():
@@ -69,6 +83,14 @@ def parse_data():
 
 def main():
     # Your Code here
+    print("Welcome to the Interactive Recipe Parser!")
+
+    url = 'https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/' 
+    #takes user input from command line
+    #url = input("Please paste the url of the recipe you want to use:")
+
+    rawData = fetch_recipe(url)
+
     return
 
 
