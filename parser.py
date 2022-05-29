@@ -56,7 +56,9 @@ def fetch_recipe(link):
 
     steps = []
     for x in stepsRaw[0]: 
-        steps.append(x.contents[0])
+        contents = x.contents[0]
+        innerSteps = contents.split('.')[:-1]
+        steps += innerSteps
 
     for x in range(0,len(steps)):
         print("Step", x+1, ":", steps[x])
