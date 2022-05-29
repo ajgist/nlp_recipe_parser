@@ -11,9 +11,18 @@ import nltk.data
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
+veg_food = []
+with open("veg.txt", "r") as f:
+  content = f.read()
+  veg_food = content.split(",")
+non_veg = []
+with open("nonveg.txt", "r") as f:
+  content = f.read()
+  veg_food = content.split(",")
+
 proteins = ['meat', 'chicken', 'tofu', 'fish']
-measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce'] #should also consider no unit (ex 1 lemon)
-tools = ['knife', 'over', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
+measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cloves'] #should also consider no unit (ex 1 lemon)
+tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for']
 
@@ -56,6 +65,7 @@ def fetch_recipe(link):
 
     steps = []
     for x in stepsRaw[0]: 
+        # split the multiple sentences in a step into multiple steps
         contents = x.contents[0]
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
@@ -79,12 +89,12 @@ def parse_data(data):
     - for quantity, 1 can (8 ounces) should be ___ just 8 ounces i think?
     """
     iList = []
-    for i in range(0, len(data["ingredients"])):
-        ingredient = data["ingredients"][i]
+    # for i in range(0, len(data["ingredients"])):
+    #     ingredient = data["ingredients"][i]
         
 
-        #iObject = Ingredient("name", "quantity", "unit")
-        #iList.append(iObject)
+    #     iObject = Ingredient("name", "quantity", "unit")
+    #     iList.append(iObject)
 
 
 
@@ -105,7 +115,7 @@ def parse_data(data):
         for word in sArr:
             if word in data["ingredients"]: ingredientsInStep.append(word)
 
-        #sObject = Step(i, "method goes here")
+        # sObject = Step(i, "method goes here")
         #sList.append(sObject)
 
     
