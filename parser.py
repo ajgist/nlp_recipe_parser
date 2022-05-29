@@ -115,7 +115,7 @@ def parse_data(data):
         for word in sArr:
             if word in data["ingredients"]: ingredientsInStep.append(word)
 
-        # sObject = Step(i, "method goes here")
+        sObject = Step(step, number = i, method = step, time=0, ingredients=ingredientsInStep, tools = [])
         #sList.append(sObject)
 
     
