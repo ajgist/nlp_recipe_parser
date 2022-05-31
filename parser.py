@@ -217,7 +217,9 @@ def main():
 
 
     rawData = fetch_recipe(url)
+    #print(rawData)
     parse_data(rawData)
+    
 
     return
 
