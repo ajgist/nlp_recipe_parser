@@ -18,6 +18,8 @@ tools = ['knife', 'over', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for']
 
+
+
 class Step:
   def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
     self.number = number
@@ -158,9 +160,6 @@ def parse_data(data):
 
     parse ingredients: ideas
     - anything to the right of a comma = descriptor or preparation
-    - first element is always a number
-    - second element is either a unit of measurement or nothing
-    - for quantity, 1 can (8 ounces) should be ___ just 8 ounces i think?
     """
     iList = []
     for i in range(0, len(data["ingredients"])):
@@ -168,9 +167,9 @@ def parse_data(data):
         iArr = word_tokenize(ingredient)
         quantity, units = find_number_and_units(iArr)
         
-        #print(iArr)
-        #print(num, units)
-        #print("____________________________")
+        print(iArr)
+        print(quantity, units)
+        print("____________________________")
 
         
         
@@ -204,6 +203,67 @@ def parse_data(data):
 
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
+
+
+def substitute(obj, substitution, property):
+    replaceWord = obj.property
+    obj.property = substitution
+    newText = obj.text.replace(replaceWord, substitution)
+    obj.text = newText
+    return
+
+
+def vegetarian(steps, ingredients):
+
+    return
+
+def nonvegetarian(steps, ingredients):
+
+    return
+
+def healthy(steps, ingredients):
+
+    return
+
+def unhealthy(steps, ingredients):
+
+    return
+
+def glutenfree(steps, ingredients):
+
+    return
+
+def asianfood(steps, ingredients): #some type of cuisine
+
+    return
+
+def doubleRecipe(steps, ingredients):
+
+    return
+
+
+def transform(steps, ingredients, transformation):
+    if transformation == "healthy":
+        return healthy(steps, ingredients)
+    elif transformation == "unhealthy":
+        return unhealthy(steps, ingredients)
+    elif transformation == "vegetarian":
+        return vegetarian(steps, ingredients)
+    elif transformation == "nonvegetarian":
+        return nonvegetarian(steps, ingredients)
+    elif transformation == "glutenfree":
+        return glutenfree(steps, ingredients)
+    elif transformation == "asian":
+        return asianfood(steps, ingredients)
+    elif transformation == "double":
+        return doubleRecipe(steps, ingredients) 
+    else: 
+        print("Your request didn't match one of the available options :(")
+        return None
+
+
+    return
+
 
 def main():
     # Your Code here
