@@ -117,7 +117,7 @@ def parse_data(data):
     prepositions = ['of', 'in', 'until', 'for', 'to', 'on']
     lemmatizer = WordNetLemmatizer()
 
-
+    j = 0
     for i in range(0, len(data["steps"])):
         step = data["steps"][i]
         sArr = word_tokenize(step)
@@ -127,7 +127,7 @@ def parse_data(data):
         # divide step also by number of actions. hopefully most of these actions have a conjunctive word before 
         # them, such as, "and".
         newSteps = helperObj.createNewSteps(actions=actions, oldStep= lemmatized_step)
-
+        
         for newStep in newSteps:
             sArr = word_tokenize(newStep)
 
@@ -149,14 +149,11 @@ def parse_data(data):
                     break
 
             methods = helperObj.getMethod(methodInStep=methodInStep)
-            print(methods, ingredientsInStep)
+            # print(methods, ingredientsInStep)
             
-
-
-        
-
-        sObject = Step(step, number = i, method = step, time=0, ingredients=ingredientsInStep, tools = [])
-        #sList.append(sObject)
+            sObject = Step(step, number = j, method = step, time=0, ingredients=ingredientsInStep, tools = [])
+            j += 1
+            sList.append(sObject)
 
     
 
@@ -174,7 +171,12 @@ def main():
     #url = input("Please paste the url of the recipe you want to use:")
 
     rawData = fetch_recipe(url)
-    parse_data(rawData)
+    recipe = parse_data(rawData)
+
+    for key, value in recipe.items():
+        if key == "steps":
+            print(value)
+
 
     return
 
