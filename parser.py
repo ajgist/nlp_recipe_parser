@@ -1,5 +1,3 @@
-'''Version 0.35'''
-
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -10,38 +8,31 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
-"""import ssl
-
-##this made nltk.pos_tag and word_tokenize work for me
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
-nltk.download('averaged_perceptron_tagger')
-nltk.download('punkt')"""
-
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
+proteins = ['meat', 'chicken', 'tofu', 'fish']
+measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce'] #should also consider no unit (ex 1 lemon)
+tools = ['knife', 'over', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
+actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
+prepositions = ['of', 'and', 'in', 'until', 'for']
+
 class Step:
-  def __init__(self, text, number, method, time, ingredients=[], tools=[]):
+  def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
     self.number = number
-    self.text = text    #
+    self.text = text
     self.method = method #cooking method
     self.time = time    #
     self.ingredients=ingredients
     self.tools=tools    #
 
 class Ingredient:
-    def __init__(self, text, name, quantity, unit, descriptors=[], prep=[]):
+    def __init__(self, text, name, quantity, unit, descriptors=[]):
         self.name=name
         self.text = text
         self.quantity=quantity
         self.unit=unit #of measurement
         self.descriptors=descriptors
-        self.prep=prep
 
 
 def fetch_recipe(link):
@@ -74,12 +65,50 @@ def fetch_recipe(link):
     data = {"ingredients": ingredients, "steps": steps}
     return data
 
-def parse_data():
-    recipe = []
+def parse_data(data):
+    recipe = {}
     """"
-    return format:
-    [list of Steps]
+    fit raw data to classes/objects
+
+    parse ingredients: ideas
+    - anything to the right of a comma = descriptor or preparation
+    - first element is always a number
+    - second element is either a unit of measurement or nothing
+    - for quantity, 1 can (8 ounces) should be ___ just 8 ounces i think?
     """
+    iList = []
+    for i in range(0, len(data["ingredients"])):
+        ingredient = data["ingredients"][i]
+        
+
+        #iObject = Ingredient("name", "quantity", "unit")
+        #iList.append(iObject)
+
+
+
+
+    """"
+    parse steps: ideas
+    - use list of ingredients as keywords to find all ingredients in a step
+    - include check for prepositions for extra details
+    - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient maybe? idk
+    """
+    sList = []
+    for i in range(0, len(data["steps"])):
+        step = data["steps"][i]
+
+        #finding ingredients from raw list
+        ingredientsInStep = []
+        sArr = word_tokenize(step)
+        for word in sArr:
+            if word in data["ingredients"]: ingredientsInStep.append(word)
+
+        #sObject = Step(i, "method goes here")
+        #sList.append(sObject)
+
+    
+
+    recipe = {"ingredients": iList, "steps": sList}
     return recipe
 
 Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
@@ -148,8 +177,9 @@ def FindTime(sentence):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
+    # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
-    url = 'https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/' 
+    url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
     #takes user input from command line
     #url = input("Please paste the url of the recipe you want to use:")
 
