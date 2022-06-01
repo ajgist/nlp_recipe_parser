@@ -1,30 +1,38 @@
+from asyncio.windows_events import NULL
 import json
 from bs4 import BeautifulSoup
 import requests
+import re
 
 
 import nltk
 from nltk.tokenize import TweetTokenizer
+from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
 
+
+from helpers import StepHelper
+
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
-veg_food = []
+veg = []
 with open("veg.txt", "r") as f:
   content = f.read()
-  veg_food = content.split(",")
+  veg = content.split(",")
 non_veg = []
 with open("nonveg.txt", "r") as f:
   content = f.read()
-  veg_food = content.split(",")
+  non_veg = content.split(",")
 
 proteins = ['meat', 'chicken', 'tofu', 'fish']
+extra = ['seasoning', 'broth', 'juice', 'tomato']
 measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cloves'] #should also consider no unit (ex 1 lemon)
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
-actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
-prepositions = ['of', 'and', 'in', 'until', 'for']
+actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
+prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
+
 
 class Step:
   def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
@@ -106,14 +114,46 @@ def parse_data(data):
     - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient maybe? idk
     """
     sList = []
+    prepositions = ['of', 'in', 'until', 'for', 'to', 'on']
+    lemmatizer = WordNetLemmatizer()
+
+
     for i in range(0, len(data["steps"])):
         step = data["steps"][i]
-
-        #finding ingredients from raw list
-        ingredientsInStep = []
         sArr = word_tokenize(step)
-        for word in sArr:
-            if word in data["ingredients"]: ingredientsInStep.append(word)
+        # lemmatize 
+        lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
+        helperObj = StepHelper()
+        # divide step also by number of actions. hopefully most of these actions have a conjunctive word before 
+        # them, such as, "and".
+        newSteps = helperObj.createNewSteps(actions=actions, oldStep= lemmatized_step)
+
+        for newStep in newSteps:
+            sArr = word_tokenize(newStep)
+
+            #finding ingredients
+            ingredientsInStep = []
+            # ingredientsText = ','.join(data["ingredients"])
+            for word in sArr:
+                if word in veg or word in non_veg or word in extra: 
+                    sArr.remove(word)
+                    ingredientsInStep.append(word)
+
+            #finding method of preparation, separate preparation into 1. period before an action 2. action 3. result following action
+            methodInStep = {"pre": None, "action": None, "post": None}
+            for word in sArr:
+                if word.lower() in actions:
+                    methodInStep["pre"] = sArr[:sArr.index(word)]
+                    methodInStep["action"] = [word]
+                    methodInStep["post"] = sArr[sArr.index(word)+1:]
+                    break
+
+            methods = helperObj.getMethod(methodInStep=methodInStep)
+            print(methods, ingredientsInStep)
+            
+
+
+        
 
         sObject = Step(step, number = i, method = step, time=0, ingredients=ingredientsInStep, tools = [])
         #sList.append(sObject)
@@ -129,10 +169,12 @@ def main():
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
     url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
+    # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
     #takes user input from command line
     #url = input("Please paste the url of the recipe you want to use:")
 
     rawData = fetch_recipe(url)
+    parse_data(rawData)
 
     return
 
