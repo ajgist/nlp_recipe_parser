@@ -39,9 +39,9 @@ class Step:
     self.number = number
     self.text = text
     self.method = method #cooking method
-    self.time = time
+    self.time = time    #
     self.ingredients=ingredients
-    self.tools=tools
+    self.tools=tools    #
 
 class Ingredient:
     def __init__(self, text, name, quantity, unit, descriptors=[]):
@@ -78,8 +78,8 @@ def fetch_recipe(link):
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
 
-    for x in range(0,len(steps)):
-        print("Step", x+1, ":", steps[x])
+    '''for x in range(0,len(steps)):
+        print("Step", x+1, ":", steps[x])'''
 
 
     data = {"ingredients": ingredients, "steps": steps}
@@ -160,6 +160,69 @@ def parse_data(data):
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
 
+Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
+        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
+          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
+         'baking dishes', 'bags', 'tablespoons', 'teaspoons']
+Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
+
+def FindTools(sentence):
+    a = str(sentence.lower())
+    tools = []
+    for item in Toolist:
+        if item in a and item not in tools:
+            tools.append(item)
+    return tools
+
+def FindTime(sentence):
+    time = 'None'
+    y = nltk.word_tokenize(str(sentence.lower()))
+    y = nltk.pos_tag(y)
+    for i in range(len(y)):
+        if y[i][0] in Timelist:
+            pt = -1
+            for index in range(i, i - 6, -1):
+                if index < 0:   break
+                if y[index][1] == 'CD': pt = index
+            if pt != -1:
+                ans = y[pt][0]
+                for j in range(pt + 1, i + 1):
+                    ans = ans + " " + y[j][0]
+                time = ans
+    if time != 'None':  return time
+    else: return None
+
+'''def createStep(steps):
+    st = 0
+    for i in steps:
+        st += 1
+        tools = []
+        a = str(i.lower())
+        for item in Toolist:
+            if item in a and item not in tools:
+                tools.append(item)
+        y = nltk.word_tokenize(str(i.lower()))
+        print(i)
+        y = nltk.pos_tag(y)
+        
+        time = 'None'
+        #print(y)
+        for i in range(len(y)):
+            if y[i][0] in Timelist:
+                pt = -1
+                for index in range(i, i - 6, -1):
+                    if index < 0:   break
+                    if y[index][1] == 'CD': pt = index
+                if pt != -1:
+                    ans = y[pt][0]
+                    for j in range(pt + 1, i + 1):
+                        ans = ans + " " + y[j][0]
+                    time = ans
+
+        print("step", st, "tools =", tools)
+        print("step", st, "time =", time)
+        print("--------------------------------")'''
+    
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
@@ -178,6 +241,12 @@ def main():
             print(value)
 
 
+    #createStep(rawData["steps"])
+    for i in rawData["steps"]:
+        print(i)
+        print(FindTools(i))
+        print(FindTime(i))
+        print("-------------------------")
     return
 
 
