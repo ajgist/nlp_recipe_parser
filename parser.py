@@ -1,4 +1,3 @@
-from email.utils import parsedate_to_datetime
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -18,6 +17,12 @@ tools = ['knife', 'over', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for']
 
+replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
+reduceIngredients = ["butter", "vegetable oil", "salt"]
+
+unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
+
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "" }
 
 
 class Step:
@@ -67,9 +72,11 @@ def fetch_recipe(link):
 
     data = {"ingredients": ingredients, "steps": steps}
     return data
+    
+
+
 
 def parse_data(data):
-
 
 # __________helper funcs_________________________________________________________
 
@@ -206,8 +213,8 @@ def parse_data(data):
 
 
 def substitute(obj, substitution, property):
-    replaceWord = obj.property
-    obj.property = substitution
+    replaceWord = getattr(obj, property)
+    setattr(obj, property, substitution)
     newText = obj.text.replace(replaceWord, substitution)
     obj.text = newText
     return
@@ -222,10 +229,58 @@ def nonvegetarian(steps, ingredients):
     return
 
 def healthy(steps, ingredients):
+    print("making recipe healthy...")
+    """ 
+    ideas:
+    - reduce amount of butter/oil by half??
+
+    - replace unhealty with healthy using dictionary
+    
+    """
+
+    for i in ingredients:
+        #if i.name in reduceIngredients:
+        #    substitute(i, (i.quantity)/2, i.quantity)
+        if i.name in replacementIngredients:
+            substitute(i, replacementIngredients[i.name], "name")
+    
+    for s in steps:
+        #reducing bad common ingredients - TO DO
+
+
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in replacementIngredients:
+                s.ingredients[i] = replacementIngredients[si]
+                s.text = s.text.replace(si, replacementIngredients[si])
 
     return
 
 def unhealthy(steps, ingredients):
+    print("making recipe unhealthy...")
+    """ 
+    ideas:
+    - replace healty with unhealthy using dictionary
+    """
+
+    for i in ingredients:
+        #if i.name in reduceIngredients:
+        #    substitute(i, (i.quantity)/2, i.quantity)
+        if i.name in replacementIngredients:
+            substitute(i, replacementIngredients[i.name], "name")
+
+    
+    for s in steps:
+        #reducing bad common ingredients - TO DO
+
+
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in unhealthyReplaceIngredients:
+                s.ingredients[i] = unhealthyReplaceIngredients[si]
+                s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
 
     return
 
@@ -276,8 +331,27 @@ def main():
 
 
 
-    rawData = fetch_recipe(url)
-    parse_data(rawData)
+    #rawData = fetch_recipe(url)
+    #parse_data(rawData)
+
+
+#Heat 2 tablespoons of the oil in a large skillet over medium high heat.
+
+    i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
+
+    s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
+   
+    print("TEXT", s.text)
+    print("INGREDIENTS", s.ingredients)
+
+    unhealthy([s], [i])
+
+    print("TEXT", s.text)
+    print("INGREDIENTS", s.ingredients)
+
+
+
+
 
     return
 
