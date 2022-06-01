@@ -88,6 +88,31 @@ Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spo
          'baking dishes', 'bags', 'tablespoons', 'teaspoons']
 Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
 
+def FindTools(sentence):
+    a = str(sentence.lower())
+    tools = []
+    for item in Toolist:
+        if item in a and item not in tools:
+            tools.append(item)
+    return tools
+
+def FindTime(sentence):
+    time = 'None'
+    y = nltk.word_tokenize(str(sentence.lower()))
+    y = nltk.pos_tag(y)
+    for i in range(len(y)):
+        if y[i][0] in Timelist:
+            pt = -1
+            for index in range(i, i - 6, -1):
+                if index < 0:   break
+                if y[index][1] == 'CD': pt = index
+            if pt != -1:
+                ans = y[pt][0]
+                for j in range(pt + 1, i + 1):
+                    ans = ans + " " + y[j][0]
+                time = ans
+    if time != 'None':  return time
+    else: return None
 
 def createStep(steps):
     st = 0
@@ -130,8 +155,12 @@ def main():
 
     rawData = fetch_recipe(url)
 
-    createStep(rawData["steps"])
+    #createStep(rawData["steps"])
+    for i in rawData["steps"]:
 
+        print(FindTools(i))
+        print(FindTime(i))
+        print("-------------------------")
     return
 
 
