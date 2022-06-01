@@ -84,7 +84,7 @@ def parse_data():
 
 Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
         'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
-          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives',
+          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
          'baking dishes', 'bags', 'tablespoons', 'teaspoons']
 Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
 
@@ -114,7 +114,7 @@ def FindTime(sentence):
     if time != 'None':  return time
     else: return None
 
-def createStep(steps):
+'''def createStep(steps):
     st = 0
     for i in steps:
         st += 1
@@ -143,7 +143,7 @@ def createStep(steps):
 
         print("step", st, "tools =", tools)
         print("step", st, "time =", time)
-        print("--------------------------------")
+        print("--------------------------------")'''
     
 def main():
     # Your Code here
@@ -157,7 +157,7 @@ def main():
 
     #createStep(rawData["steps"])
     for i in rawData["steps"]:
-
+        print(i)
         print(FindTools(i))
         print(FindTime(i))
         print("-------------------------")
