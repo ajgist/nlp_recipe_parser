@@ -97,6 +97,24 @@ def parse_data(data):
         print("ingredient name: " + ingredient)
         return ingredient
                 
+    def find_descriptors(iArr):
+        # extract everything after the comma
+        descriptor = ""
+        checker = False
+        in_parentheses = False
+        for i in range(0, len(iArr)):
+            if iArr[i] == "(":
+                in_parentheses = True
+            elif iArr[i] == ")":
+                in_parentheses = False
+            if not checker and iArr[i] == "," and not in_parentheses:
+                checker = True
+            elif checker:
+                descriptor = descriptor + iArr[i] + " "
+        print("descriptors: " + descriptor)
+        return descriptor
+        
+
 
 # _______________________________________________________________________________
     recipe = {}
@@ -114,7 +132,8 @@ def parse_data(data):
         ingredient = data["ingredients"][i]
         iArr = word_tokenize(ingredient)
         print(iArr)
-        ingredients = find_name(iArr)
+        descriptors = find_descriptors(iArr)
+        #ingredients = find_name(iArr)
         #quantity, units = find_number_and_units(iArr)
         
         #print(iArr)
