@@ -1,0 +1,11 @@
+
+                    <html>
+                    <header>
+                    Recipe: Non Vegetarian Transformation
+                    </header>
+                    <body>
+                    <title> Ingredients </title>
+                         {{htmlText}}
+                    </body>
+                    </html>
+                    
