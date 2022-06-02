@@ -248,8 +248,8 @@ def main():
 
     #-----------veg url---------------------#
     # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
-    # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
-    url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
+    url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
+    # url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
 
     #---------------------------------------#
 
