@@ -2,7 +2,7 @@ import json
 from bs4 import BeautifulSoup
 import requests
 import re
-
+import string
 
 import nltk
 from nltk.tokenize import TweetTokenizer
@@ -14,14 +14,43 @@ nltk.download('omw-1.4')
 
 from structure import Step, Ingredient
 
+
 class Transform():
+     def reconstruct(self, texts):
+          """
+          input: Dictionary of step instructions
+          output: Dictionary of step instructions modified. 
+
+          idea: If a step is has 4 or less words, then carry on the next step into the same step        
+          """
+
+          newTexts = {}
+          i = 0
+          j = 0
+          L = len(texts)
+
+          while i<L:
+               text = texts[i]
+               newText = text
+               word_count = len([ word for word in text.split() if word not in string.punctuation])
+               if word_count <= 4 and i+1<L:
+                    newText += " and " + texts[i+1].lower()
+                    i += 1
+               newTexts[j] = newText
+               i += 1
+               j += 1
+          
+          return newTexts
+
+
+
      def nonvegetarian(self, steps, ingredients):
           print("making recipe non-vegetarian...")
           """ 
           ideas:
           - find any pre-existing methods in the steps :-
-                    - if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
-                    - otherwise in ingredients and methods suggest grounded beef.
+                    - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
+                    - CASE 2: otherwise in ingredients and methods suggest grounded beef.
           
           """
           flag = 0
@@ -30,8 +59,14 @@ class Transform():
           methodInStep = {}
           toolInStep = {}
           textInStep = {}
+          
           j = 0
-          for step in steps:
+          number = 0
+          L = len(steps)
+
+          # case 1
+          while number < L:
+               step = steps[number]
                textInStep[j] = step.text
                methodInStep[j] = step.method
                toolInStep[j] = step.tools
@@ -49,10 +84,19 @@ class Transform():
                     j += 1
                     suggestedInstruction = "Bake chicken uncovered in the preheated oven until no longer pink at the bone and the juices run clear, about 1 hour and 15 minutes"
                     textInStep[j] = suggestedInstruction
+
+                    nextStep = steps[number + 1]
+                    steps[number + 1] = Step(text = "Meanwhile, "+ nextStep.text.lower(), method=nextStep.method, tools=nextStep.tools) 
                     
+                    # to bring the entire recipe together
+                    suggestedInstruction = "Shred the baked chicken and serve with the rest."
+                    finalStep = Step(text = suggestedInstruction, method="shred", tools=[]) 
+                    steps.append(finalStep)
+                    L += 1
+
                     flag = 1
                
-
+               # case 2
                if flag == 0:
                     for key, method in methodInStep.items():
                          if method == "stir":
@@ -66,9 +110,12 @@ class Transform():
                               j += 1
                               suggestedInstruction = "Add grounded beef and cook, stirring and crumbling into small pieces until browned, 5 to 7 minutes."
                               textInStep[j] = suggestedInstruction
+                              flag = 1
 
                # print( j , ":" , textInStep[j])
                j += 1
+               number += 1
+
 
           print("Printing Ingredients...")
           for number, ingredient in enumerate(ingredients):
@@ -77,7 +124,8 @@ class Transform():
           print("--------------------------------------------------------------------------------")
 
           print("Printing Instructions...")
-          for number, step in textInStep.items():
+          newTextInStep = self.reconstruct(textInStep)
+          for number, step in newTextInStep.items():
                print( f"Step {number}: ", step)
 
           print("--------------------------------------------------------------------------------")

@@ -160,15 +160,14 @@ def parse_data(data):
     iList = []
     for i in range(0, len(data["ingredients"])):
         ingredient = data["ingredients"][i]
-        iArr = word_tokenize(ingredient)
-        quantity, units = find_number_and_units(iArr)
         
-        print(iArr)
-        print(quantity, units)
-        print("____________________________")
+        # print(iArr)
+        # print(quantity, units)
+        # print("____________________________")
 
-        
-        
+        iObject = Ingredient(text=data["ingredients"][i])
+        iList.append(iObject)
+
 
 
     """
@@ -248,7 +247,10 @@ def main():
     # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
 
     #-----------veg url---------------------#
-    url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+    # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
+    url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
+
     #---------------------------------------#
 
     #takes user input from command line
