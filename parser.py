@@ -52,6 +52,7 @@ class Ingredient:
         self.descriptors=descriptors
 
 
+
 def fetch_recipe(link):
     html = requests.get(url = link).text
     soup = BeautifulSoup(html, 'html.parser')
@@ -115,6 +116,11 @@ def parse_data(data):
     """
     sList = []
     prepositions = ['of', 'in', 'until', 'for', 'to', 'on']
+    Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
+        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
+          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
+         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet']
+    Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
     lemmatizer = WordNetLemmatizer()
 
     j = 0
@@ -129,8 +135,10 @@ def parse_data(data):
         newSteps = helperObj.createNewSteps(actions=actions, oldStep= lemmatized_step)
         
         for newStep in newSteps:
+            text = newStep
+            tools, newStep = helperObj.FindTools(sentence=newStep, Toolist=Toolist)
+            time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
             sArr = word_tokenize(newStep)
-
             #finding ingredients
             ingredientsInStep = []
             # ingredientsText = ','.join(data["ingredients"])
@@ -149,9 +157,9 @@ def parse_data(data):
                     break
 
             methods = helperObj.getMethod(methodInStep=methodInStep)
-            # print(methods, ingredientsInStep)
+            print(methods, ingredientsInStep, time, tools)
             
-            sObject = Step(step, number = j, method = step, time=0, ingredients=ingredientsInStep, tools = [])
+            sObject = Step(text, number = j, method = step, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
 
@@ -160,37 +168,8 @@ def parse_data(data):
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
 
-Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
-        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
-          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
-         'baking dishes', 'bags', 'tablespoons', 'teaspoons']
-Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
 
-def FindTools(sentence):
-    a = str(sentence.lower())
-    tools = []
-    for item in Toolist:
-        if item in a and item not in tools:
-            tools.append(item)
-    return tools
 
-def FindTime(sentence):
-    time = 'None'
-    y = nltk.word_tokenize(str(sentence.lower()))
-    y = nltk.pos_tag(y)
-    for i in range(len(y)):
-        if y[i][0] in Timelist:
-            pt = -1
-            for index in range(i, i - 6, -1):
-                if index < 0:   break
-                if y[index][1] == 'CD': pt = index
-            if pt != -1:
-                ans = y[pt][0]
-                for j in range(pt + 1, i + 1):
-                    ans = ans + " " + y[j][0]
-                time = ans
-    if time != 'None':  return time
-    else: return None
 
 '''def createStep(steps):
     st = 0
@@ -236,18 +215,18 @@ def main():
     rawData = fetch_recipe(url)
     recipe = parse_data(rawData)
 
-    for key, value in recipe.items():
-        if key == "steps":
-            print(value)
+    # for key, value in recipe.items():
+    #     if key == "steps":
+    #         print(value)
 
 
     #createStep(rawData["steps"])
-    for i in rawData["steps"]:
-        print(i)
-        print(FindTools(i))
-        print(FindTime(i))
-        print("-------------------------")
-    return
+    # for i in rawData["steps"]:
+    #     print(i)
+    #     print(FindTools(i))
+    #     print(FindTime(i))
+    #     print("-------------------------")
+    # return
 
 
 if __name__ == '__main__':
