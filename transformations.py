@@ -52,8 +52,9 @@ class Transform():
           ideas:
           - find any pre-existing methods in the steps :-
                     - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
-                    - CASE 2: otherwise in ingredients and methods suggest grounded beef.
-          
+                    - CASE 2:check if preheat and grill; we will add grilled chicken to the recipe.
+                    - CASE 3: otherwise in ingredients and methods suggest grounded beef.
+                    
           """
           flag = 0
 
@@ -78,7 +79,7 @@ class Transform():
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
 
                     
-                    # add a step for baking chicken
+                    # add all steps for baking chicken
                     j += 1
                     suggestedInstruction = "Place the chicken in a roasting pan, and season generously inside and out with salt and pepper."
                     textInStep[j] = suggestedInstruction
@@ -97,8 +98,63 @@ class Transform():
                     L += 1
 
                     flag = 1
-               
+
                # case 2
+               if flag == 0 and step.method == "preheat" and "grill" in step.tools:
+                    # add more ingredients
+                    ingredients.append(Ingredient(text="4 (8 ounce) boneless, skinless chicken breasts"))
+
+
+                    # store this preheat grill step for later. First prepare chicken.
+                    grillInstruction = textInStep[j]
+
+                    
+                    # add all steps for grilling chicken
+                    suggestedInstruction = "Cut chicken breasts in half lengthwise."
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Combine kosher salt, black pepper, oregano, and garlic powder in a bowl"
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Add chicken and toss until thoroughly and evenly coated."
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Cover with plastic wrap and marinate in the refrigerator for 1 to 12 hours, but 2 to 3 hours is ideal."
+                    textInStep[j] = suggestedInstruction
+
+                    # now add the preheat grill step
+                    j += 1
+                    suggestedInstruction = grillInstruction
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Grill chicken over the hot coals for about 4 minutes per side."
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Continue to flip and grill chicken until no longer pink in the center and an instant-read thermometer inserted into the center of each piece reads at least 150 degrees F (65 degrees C)."
+                    textInStep[j] = suggestedInstruction
+
+                    j += 1
+                    suggestedInstruction = "Remove from the grill and let rest for about 5 minutes."
+                    textInStep[j] = suggestedInstruction
+
+
+                    nextStep = steps[number + 1]
+                    steps[number + 1] = Step(text = "Meanwhile, "+ nextStep.text.lower(), method=nextStep.method, tools=nextStep.tools) 
+                    
+                    # to bring the entire recipe together
+                    suggestedInstruction = "Serve with the grilled chicken."
+                    finalStep = Step(text = suggestedInstruction, method="shred", tools=[]) 
+                    steps.append(finalStep)
+                    L += 1
+
+                    flag = 1
+               
+               # case 3 ; more general case
                if flag == 0:
                     for key, method in methodInStep.items():
                          if method == "stir":

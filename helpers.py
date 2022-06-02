@@ -34,23 +34,6 @@ class StepHelper():
           newSteps.append(oldStep)
           return newSteps
 
-     # def getMethod(self, methodInStep):
-     #      method = None
-          
-     #      if methodInStep["pre"]!= []:
-     #           if methodInStep["post"] != []:
-     #                method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + [" ".join(methodInStep["post"])]
-     #           else:
-     #                method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + ['']
-     #      else: 
-     #           if methodInStep["post"] != []:
-     #                method =  [''] + methodInStep["action"] + [" ".join(methodInStep["post"])]
-     #           else: 
-     #                method = [''] + methodInStep["action"] + ['']
-     
-     #      return method
-
-
      def FindTools(self, sentence, Toolist):
           """
           Inputs: sentence: A step 

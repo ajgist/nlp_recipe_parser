@@ -3,6 +3,7 @@ import json
 from bs4 import BeautifulSoup
 import requests
 import unicodedata
+import re
 
 import nltk
 from nltk.tokenize import TweetTokenizer
@@ -70,7 +71,7 @@ def fetch_recipe(link):
     return data
 
 def parse_data(data):
-     #takes array of digit elements and fractions and returns sum
+    #takes array of digit elements and fractions and returns sum
     def arrayToNum(numArr):
             sum = 0
             for num in numArr:
@@ -178,17 +179,17 @@ def parse_data(data):
     """
 
     sList = []
-    prepositions = ['of', 'in', 'until', 'for', 'to', 'on']
     Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
         'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
           'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
-         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet']
+         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet', "grill"]
     Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
     lemmatizer = WordNetLemmatizer()
 
     j = 0
     for i in range(0, len(data["steps"])):
         step = data["steps"][i]
+        step = step.encode("ascii", "ignore").decode() # remove unicode
         sArr = word_tokenize(step)
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
@@ -230,13 +231,6 @@ def parse_data(data):
 
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
-
-def substitute(obj, substitution, property):
-    replaceWord = getattr(obj, property)
-    setattr(obj, property, substitution)
-    newText = obj.text.replace(replaceWord, substitution)
-    obj.text = newText
-    return
     
 def main():
     # Your Code here
@@ -246,10 +240,20 @@ def main():
     # url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
     # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
 
-    #-----------veg url---------------------#
-    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
-    url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
+    #-----------veg url for nonveg transformations---------------------#
+
+    # grounded beef
+    url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+
+    #shredded baked chicken
+    # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
+
+    #grounded beef
     # url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
+
+    #grilled
+    # url = "https://www.allrecipes.com/recipe/256728/grilled-portobello-mushrooms-with-mashed-cannellini-beans-and-harissa-sauce/"
+
 
     #---------------------------------------#
 
