@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -27,29 +26,29 @@ class StepHelper():
                first = oldStep[:result.span(0)[0]]
                second = oldStep[result.span(1)[1]:]
                if result.group("possible_action") in actions:
-                    newSteps.append(first)
-                    oldStep = second
+                    newSteps.append(first.strip(' ').capitalize())
+                    oldStep = second.strip(' ').capitalize()
                else: 
-                    oldStep = first + ',' + second 
+                    oldStep = first.strip(' ') + ',' + second 
 
           newSteps.append(oldStep)
           return newSteps
 
-     def getMethod(self, methodInStep):
-          method = None
+     # def getMethod(self, methodInStep):
+     #      method = None
           
-          if methodInStep["pre"]!= []:
-               if methodInStep["post"] != []:
-                    method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + [" ".join(methodInStep["post"])]
-               else:
-                    method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + ['']
-          else: 
-               if methodInStep["post"] != []:
-                    method =  [''] + methodInStep["action"] + [" ".join(methodInStep["post"])]
-               else: 
-                    method = [''] + methodInStep["action"] + ['']
+     #      if methodInStep["pre"]!= []:
+     #           if methodInStep["post"] != []:
+     #                method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + [" ".join(methodInStep["post"])]
+     #           else:
+     #                method = [" ".join(methodInStep["pre"])] + methodInStep["action"] + ['']
+     #      else: 
+     #           if methodInStep["post"] != []:
+     #                method =  [''] + methodInStep["action"] + [" ".join(methodInStep["post"])]
+     #           else: 
+     #                method = [''] + methodInStep["action"] + ['']
      
-          return method
+     #      return method
 
 
      def FindTools(self, sentence, Toolist):
