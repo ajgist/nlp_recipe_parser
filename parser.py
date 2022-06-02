@@ -8,6 +8,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+from structure import Step, Ingredient
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
@@ -22,25 +23,10 @@ reduceIngredients = ["butter", "vegetable oil", "salt"]
 
 unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
 
-gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "" }
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta" }
 
 
-class Step:
-  def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
-    self.number = number
-    self.text = text
-    self.method = method #cooking method
-    self.time = time
-    self.ingredients=ingredients
-    self.tools=tools
 
-class Ingredient:
-    def __init__(self, text, name, quantity, unit, descriptors=[]):
-        self.name=name
-        self.text = text
-        self.quantity=quantity
-        self.unit=unit #of measurement
-        self.descriptors=descriptors
 
 
 def fetch_recipe(link):
@@ -158,7 +144,6 @@ def parse_data(data):
         sum = arrayToNum(numArr)
         sum = sum * multiplier
         return sum, unit
-        #return {"number": sum, "unit": unit}
 
 # _______________________________________________________________________________
     recipe = {}
@@ -212,6 +197,7 @@ def parse_data(data):
     return recipe
 
 
+#helper func to substitute property and do a replace on the text (NOT good for step.ingredients since it is a list)
 def substitute(obj, substitution, property):
     replaceWord = getattr(obj, property)
     setattr(obj, property, substitution)
@@ -265,26 +251,41 @@ def unhealthy(steps, ingredients):
     """
 
     for i in ingredients:
-        #if i.name in reduceIngredients:
-        #    substitute(i, (i.quantity)/2, i.quantity)
         if i.name in replacementIngredients:
             substitute(i, replacementIngredients[i.name], "name")
 
     
     for s in steps:
-        #reducing bad common ingredients - TO DO
-
-
         #substituting ingredients for healthier ones
         for i in range(0, len(s.ingredients)):
             si = s.ingredients[i]
             if si in unhealthyReplaceIngredients:
                 s.ingredients[i] = unhealthyReplaceIngredients[si]
                 s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
+        
+        #doubling bad common ingredients? - TO DO
 
     return
 
 def glutenfree(steps, ingredients):
+    print("making recipe gluten free...")
+    """ 
+    ideas:
+    - replace gluten with gluten free using dictionary
+    """
+
+    for i in ingredients:
+        if i.name in gfReplacementIngredients:
+            substitute(i, gfReplacementIngredients[i.name], "name")
+
+    
+    for s in steps:
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in gfReplacementIngredients:
+                s.ingredients[i] = gfReplacementIngredients[si]
+                s.text = s.text.replace(si, gfReplacementIngredients[si])
 
     return
 
@@ -312,10 +313,22 @@ def transform(steps, ingredients, transformation):
         return asianfood(steps, ingredients)
     elif transformation == "double":
         return doubleRecipe(steps, ingredients) 
-    else: 
+    else:
         print("Your request didn't match one of the available options :(")
         return None
 
+
+def printRecipe(steps, ingredients):
+    print("Ingredients List")
+    print("____________________________________")
+    for x in ingredients:
+        print(x.text)
+    print(" ")
+
+    print("Directions")
+    print("____________________________________")
+    for i in range(0,len(steps)):
+        print("Step", i+1, ":", steps[i].text)
 
     return
 
@@ -335,23 +348,16 @@ def main():
     #parse_data(rawData)
 
 
-#Heat 2 tablespoons of the oil in a large skillet over medium high heat.
+    #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
 
-    i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
-
-    s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
-   
-    print("TEXT", s.text)
-    print("INGREDIENTS", s.ingredients)
-
-    unhealthy([s], [i])
-
-    print("TEXT", s.text)
-    print("INGREDIENTS", s.ingredients)
+    #i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
+    #s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
+ 
 
 
+    #unhealthy([s], [i])
 
-
+    #printRecipe([s], [i])
 
     return
 
