@@ -11,6 +11,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+from structure import Step, Ingredient
 
 
 from helpers import StepHelper
@@ -30,11 +31,21 @@ with open("nonveg.txt", "r") as f:
   non_veg = content.split(",")
 
 proteins = ['meat', 'chicken', 'tofu', 'fish']
+
+measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
 extra = ['seasoning', 'broth', 'juice', 'tomato']
-measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cloves'] #should also consider no unit (ex 1 lemon)
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
+
+
+replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
+reduceIngredients = ["butter", "vegetable oil", "salt"]
+
+unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
+
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta" }
+
 
 
 def fetch_recipe(link):
@@ -69,8 +80,14 @@ def fetch_recipe(link):
 
     data = {"ingredients": ingredients, "steps": steps}
     return data
+    
+
+
 
 def parse_data(data):
+  
+# __________helper funcs_________________________________________________________
+
     #takes array of digit elements and fractions and returns sum
     def arrayToNum(numArr):
             sum = 0
@@ -149,7 +166,6 @@ def parse_data(data):
         sum = arrayToNum(numArr)
         sum = sum * multiplier
         return sum, unit
-        #return {"number": sum, "unit": unit}
 
 # _______________________________________________________________________________
     recipe = {}
@@ -161,15 +177,22 @@ def parse_data(data):
     iList = []
     for i in range(0, len(data["ingredients"])):
         ingredient = data["ingredients"][i]
+        iArr = word_tokenize(ingredient)
+        quantity, units = find_number_and_units(iArr)
         
-        # print(iArr)
-        # print(quantity, units)
-        # print("____________________________")
+
+        print(iArr)
+        print(quantity, units)
+        print("____________________________")
 
         iObject = Ingredient(text=data["ingredients"][i])
         iList.append(iObject)
 
 
+        #iObject = Ingredient("name", quantity, units)
+        #iList.append(iObject)
+
+    sList = []
 
     """
     parse steps: ideas
@@ -177,6 +200,7 @@ def parse_data(data):
     - include check for prepositions for extra details
     - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient maybe? idk
     """
+
 
     sList = []
     Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
@@ -191,6 +215,13 @@ def parse_data(data):
         step = data["steps"][i]
         step = step.encode("ascii", "ignore").decode() # remove unicode
         sArr = word_tokenize(step)
+
+        for word in sArr:
+            if word in data["ingredients"]: ingredientsInStep.append(word)
+
+        #sObject = Step(i, "method goes here")
+        #sList.append(sObject)
+
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
         helperObj = StepHelper()
@@ -231,11 +262,172 @@ def parse_data(data):
 
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
+
+
+
+#helper func to substitute property and do a replace on the text (NOT good for step.ingredients since it is a list)
+def substitute(obj, substitution, property):
+    replaceWord = getattr(obj, property)
+    setattr(obj, property, substitution)
+    newText = obj.text.replace(replaceWord, substitution)
+    obj.text = newText
+    return
+
+
+def vegetarian(steps, ingredients):
+
+    return
+
+def nonvegetarian(steps, ingredients):
+
+    return
+
+def healthy(steps, ingredients):
+    print("making recipe healthy...")
+    """ 
+    ideas:
+    - reduce amount of butter/oil by half??
+
+    - replace unhealty with healthy using dictionary
     
+    """
+
+    for i in ingredients:
+        #if i.name in reduceIngredients:
+        #    substitute(i, (i.quantity)/2, i.quantity)
+        if i.name in replacementIngredients:
+            substitute(i, replacementIngredients[i.name], "name")
+    
+    for s in steps:
+        #reducing bad common ingredients - TO DO
+
+
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in replacementIngredients:
+                s.ingredients[i] = replacementIngredients[si]
+                s.text = s.text.replace(si, replacementIngredients[si])
+
+    return
+
+def unhealthy(steps, ingredients):
+    print("making recipe unhealthy...")
+    """ 
+    ideas:
+    - replace healty with unhealthy using dictionary
+    """
+
+    for i in ingredients:
+        if i.name in replacementIngredients:
+            substitute(i, replacementIngredients[i.name], "name")
+
+    
+    for s in steps:
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in unhealthyReplaceIngredients:
+                s.ingredients[i] = unhealthyReplaceIngredients[si]
+                s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
+        
+        #doubling bad common ingredients? - TO DO
+
+    return
+
+def glutenfree(steps, ingredients):
+    print("making recipe gluten free...")
+    """ 
+    ideas:
+    - replace gluten with gluten free using dictionary
+    """
+
+    for i in ingredients:
+        if i.name in gfReplacementIngredients:
+            substitute(i, gfReplacementIngredients[i.name], "name")
+
+    
+    for s in steps:
+        #substituting ingredients for healthier ones
+        for i in range(0, len(s.ingredients)):
+            si = s.ingredients[i]
+            if si in gfReplacementIngredients:
+                s.ingredients[i] = gfReplacementIngredients[si]
+                s.text = s.text.replace(si, gfReplacementIngredients[si])
+
+    return
+
+def asianfood(steps, ingredients): #some type of cuisine
+
+    return
+
+def doubleRecipe(steps, ingredients):
+
+    return
+
+
+def transform(steps, ingredients, transformation):
+    if transformation == "healthy":
+        return healthy(steps, ingredients)
+    elif transformation == "unhealthy":
+        return unhealthy(steps, ingredients)
+    elif transformation == "vegetarian":
+        return vegetarian(steps, ingredients)
+    elif transformation == "nonvegetarian":
+        return nonvegetarian(steps, ingredients)
+    elif transformation == "glutenfree":
+        return glutenfree(steps, ingredients)
+    elif transformation == "asian":
+        return asianfood(steps, ingredients)
+    elif transformation == "double":
+        return doubleRecipe(steps, ingredients) 
+    else:
+        print("Your request didn't match one of the available options :(")
+        return None
+
+
+def printRecipe(steps, ingredients):
+    print("Ingredients List")
+    print("____________________________________")
+    for x in ingredients:
+        print(x.text)
+    print(" ")
+
+    print("Directions")
+    print("____________________________________")
+    for i in range(0,len(steps)):
+        print("Step", i+1, ":", steps[i].text)
+
+    return
+
+
+
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
+
+    url = 'https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/' 
+    #takes user input from command line
+    #url = input("Please paste the url of the recipe you want to use:")
+
+
+
+    #rawData = fetch_recipe(url)
+    #parse_data(rawData)
+
+
+    #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
+
+    #i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
+    #s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
+ 
+
+
+    #unhealthy([s], [i])
+
+    #printRecipe([s], [i])
+
 
     # url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
     # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
@@ -264,6 +456,9 @@ def main():
     recipe = parse_data(rawData)
     transformObj = Transform()
     transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    
+    return
+
 
 
 if __name__ == '__main__':
