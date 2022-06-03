@@ -3,9 +3,9 @@ class Step:
     self.number = number
     self.text = text
     self.method = method #cooking method
-    self.time = time    #
+    self.time = time
     self.ingredients=ingredients
-    self.tools=tools    #
+    self.tools=tools
 
 class Ingredient:
     def __init__(self, text=None, name=None, quantity=None, unit=None, descriptors=[]):

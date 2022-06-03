@@ -17,6 +17,21 @@ nltk.download('omw-1.4')
 from structure import Step, Ingredient
 
 
+replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
+reduceIngredients = ["butter", "vegetable oil", "salt"]
+
+unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta" }
+
+
+
+def substitute(obj, substitution, property):
+          replaceWord = getattr(obj, property)
+          setattr(obj, property, substitution)
+          newText = obj.text.replace(replaceWord, substitution)
+          obj.text = newText
+          return
+
 class Transform():
      def reconstruct(self, texts):
           """
@@ -26,7 +41,7 @@ class Transform():
           idea: If a step is has 4 or less words, then carry on the next step into the same step        
           """
 
-          newTexts = {}
+          newTexts = []
           i = 0
           j = 0
           L = len(texts)
@@ -38,9 +53,8 @@ class Transform():
                if word_count <= 4 and i+1<L:
                     newText += " and " + texts[i+1].lower()
                     i += 1
-               newTexts[j] = newText
+               newTexts.append(Step(text= newText))
                i += 1
-               j += 1
           
           return newTexts
 
@@ -69,8 +83,8 @@ class Transform():
           number = 0
           L = len(steps)
 
-          # case 0
-          #-------------------ingredients part-----------------------------#
+          #case 0
+          #ingredients part; search for tofu
           newIngredients = []
           flag = 0
           for ingredient in ingredients:
@@ -82,32 +96,18 @@ class Transform():
                else:
                     newIngredients.append(ingredient)
 
-          #---------------------end---------------------------------------#
 
-          #------------------steps part--------------------------------------#
+          #steps part if tofu present
+          if flag == 1:
+               newSteps = []
+               for step in steps:
+                    text = re.sub('tofu', "beef", step.text)
+                    newSteps.append(Step(text=text))
+         
+               
+               return ( newSteps, newIngredients )
 
-          newSteps = []
-          for step in steps:
-               text = re.sub('tofu', "beef", step.text)
-               newSteps.append(text)
-          #-----------------end------------------------------------------#
-
-          
-          print("Printing Ingredients...")
-          for number, ingredient in enumerate(newIngredients):
-               print( number , ":", ingredient.text)
-
-          print("--------------------------------------------------------------------------------")
-
-          print("Printing Instructions...")
-          newSteps = self.reconstruct(newSteps)
-          for number, step in newSteps.items():
-               print( f"Step {number}: ", step)
-
-          print("--------------------------------------------------------------------------------")
-
-
-          if flag == 1: return
+          # other cases
           while number < L:
                step = steps[number]
                textInStep[j] = step.text
@@ -211,58 +211,14 @@ class Transform():
                               textInStep[j] = suggestedInstruction
                               flag = 1
 
-               # print( j , ":" , textInStep[j])
                j += 1
                number += 1
 
+          newSteps = self.reconstruct(textInStep)
+         
+          return ( ingredients, newSteps )
 
-          print("Printing Ingredients...")
-          for number, ingredient in enumerate(ingredients):
-               print( number , ":", ingredient.text)
-
-          print("--------------------------------------------------------------------------------")
-
-          print("Printing Instructions...")
-          newTextInStep = self.reconstruct(textInStep)
-          for number, step in newTextInStep.items():
-               print( f"Step {number}: ", step)
-
-          print("--------------------------------------------------------------------------------")
-
-          # # html output
-
-          # wrapper = """
-          #           <html>
-          #           <header>
-          #           Recipe: Non Vegetarian Transformation
-          #           </header>
-          #           <body>
-          #           <title> Ingredients </title>
-          #                {{htmlText}}
-          #           </body>
-          #           </html>
-          #           """
-
-          # file_loader = FileSystemLoader('templates')
-          # env = Environment(loader=file_loader)
-
-          # htmlLines = ["<ul>"]
-          # for ingredient in ingredients:
-          #      textLine = ingredient.text
-          #      htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-          # htmlLines.append("</ul>")
-          # htmlText = '\n'.join(htmlLines)
-
-          # with open("templates/ingredients.txt",'w') as f:
-          #      f.write(wrapper)
           
-
-
-          # template = env.get_template("ingredients.txt")
-          # output = template.render(htmlText = htmlText)
-          
-          # with open("ingredients.html",'w') as f:
-          #      f.write(output)
 #-----------------------------------------------NON VEGETARIAN TRANSFORMATION END--------------------------------------------------------------#
 
 #-----------------------------------------------VEGETARIAN TANSFORMATION-----------------------------------------------------------------------#
@@ -277,7 +233,7 @@ class Transform():
                     
                     
           """
-          #-------------------ingredients part-----------------------------#
+          #ingredients part
           newIngredients = []
           meats = ["chicken", "beef", "pork"]
           flag = 0
@@ -289,9 +245,8 @@ class Transform():
                else:
                     newIngredients.append(ingredient)
 
-          #---------------------end---------------------------------------#
 
-          #------------------steps part--------------------------------------#
+          #steps part
 
           meat_descriptors = ["wings", "breast", "ground"] # remove these from step texts
           newSteps = []
@@ -299,8 +254,6 @@ class Transform():
                text = re.sub('(wings|breast|ground)', '', step.text)
                text = re.sub('(chicken|beef|pork)', "tofu", text)
                newSteps.append(text)
-          #-----------------end------------------------------------------#
-
           
 
           print("Printing Ingredients...")
@@ -315,6 +268,93 @@ class Transform():
                print( f"Step {number}: ", step)
 
           print("--------------------------------------------------------------------------------")
+
+#----------------------------------------------------------------END------------------------------------------#
+
+
+     def healthy(self, steps, ingredients):
+          print("making recipe healthy...")
+          """ 
+          ideas:
+          - reduce amount of butter/oil by half??
+
+          - replace unhealty with healthy using dictionary
+    
+          """
+
+          for i in ingredients:
+               #if i.name in reduceIngredients:
+               #    substitute(i, (i.quantity)/2, i.quantity)
+               if i.name in replacementIngredients:
+                    substitute(i, replacementIngredients[i.name], "name")
+    
+          for s in steps:
+               #reducing bad common ingredients - TO DO
+
+
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in replacementIngredients:
+                         s.ingredients[i] = replacementIngredients[si]
+                         s.text = s.text.replace(si, replacementIngredients[si])
+
+          return
+
+     def unhealthy(self, steps, ingredients):
+          print("making recipe unhealthy...")
+          """ 
+          ideas:
+          - replace healty with unhealthy using dictionary
+          """
+
+          for i in ingredients:
+               if i.name in replacementIngredients:
+                    substitute(i, replacementIngredients[i.name], "name")
+
+    
+          for s in steps:
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in unhealthyReplaceIngredients:
+                         s.ingredients[i] = unhealthyReplaceIngredients[si]
+                         s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
+
+        
+               #doubling bad common ingredients? - TO DO
+
+          return
+
+     def glutenfree(self, steps, ingredients):
+          print("making recipe gluten free...")
+          """ 
+          ideas:
+          - replace gluten with gluten free using dictionary
+          """
+
+          for i in ingredients:
+               if i.name in gfReplacementIngredients:
+                    substitute(i, gfReplacementIngredients[i.name], "name")
+
+    
+          for s in steps:
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in gfReplacementIngredients:
+                         s.ingredients[i] = gfReplacementIngredients[si]
+                         s.text = s.text.replace(si, gfReplacementIngredients[si])
+
+          return
+
+     def asianfood(self, steps, ingredients): #some type of cuisine
+
+          return
+
+     def doubleRecipe(self, steps, ingredients):
+
+          return
 
 
 

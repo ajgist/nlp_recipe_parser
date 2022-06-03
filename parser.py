@@ -1,4 +1,3 @@
-from asyncio.windows_events import NULL
 import json
 from bs4 import BeautifulSoup
 import requests
@@ -11,11 +10,24 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+from structure import Step, Ingredient
 
 
 from helpers import StepHelper
 from transformations import Transform
 from structure import Step, Ingredient
+
+
+#for nltk import errors
+import ssl
+try:
+    _create_unverified_https_context = ssl._create_unverified_context
+except AttributeError:
+    pass
+else:
+    ssl._create_default_https_context = _create_unverified_https_context
+nltk.download('wordnet')
+nltk.download('omw-1.4')
 
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
@@ -30,11 +42,20 @@ with open("nonveg.txt", "r") as f:
   non_veg = content.split(",")
 
 proteins = ['meat', 'chicken', 'tofu', 'fish']
+
+measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
 extra = ['seasoning', 'broth', 'juice', 'tomato']
-measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cloves'] #should also consider no unit (ex 1 lemon)
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
+
+Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
+        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
+          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
+         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet', "grill"]
+Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
+
+
 
 
 def fetch_recipe(link):
@@ -52,9 +73,8 @@ def fetch_recipe(link):
     for x in ingredientsRaw:
         ingredients.append(x.contents[0])
 
-    print("Ingredients List")
-    for x in ingredients:
-        print(x)
+    # for x in ingredients:
+    #     print(x)
 
     steps = []
     for x in stepsRaw[0]: 
@@ -69,8 +89,14 @@ def fetch_recipe(link):
 
     data = {"ingredients": ingredients, "steps": steps}
     return data
+    
+
+
 
 def parse_data(data):
+  
+# __________helper funcs_________________________________________________________
+
     #takes array of digit elements and fractions and returns sum
     def arrayToNum(numArr):
             sum = 0
@@ -149,9 +175,8 @@ def parse_data(data):
         sum = arrayToNum(numArr)
         sum = sum * multiplier
         return sum, unit
-        #return {"number": sum, "unit": unit}
 
-# _______________________________________________________________________________
+# ______________end of ingredient quantity/unit parsing__________________________________
     recipe = {}
     """"
     fit raw data to classes/objects
@@ -161,7 +186,10 @@ def parse_data(data):
     iList = []
     for i in range(0, len(data["ingredients"])):
         ingredient = data["ingredients"][i]
+        iArr = word_tokenize(ingredient)
+        quantity, units = find_number_and_units(iArr)
         
+
         # print(iArr)
         # print(quantity, units)
         # print("____________________________")
@@ -170,6 +198,10 @@ def parse_data(data):
         iList.append(iObject)
 
 
+        #iObject = Ingredient("name", quantity, units)
+        #iList.append(iObject)
+
+    sList = []
 
     """
     parse steps: ideas
@@ -178,12 +210,8 @@ def parse_data(data):
     - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient maybe? idk
     """
 
+
     sList = []
-    Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
-        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
-          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
-         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet', "grill"]
-    Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
     lemmatizer = WordNetLemmatizer()
 
     j = 0
@@ -191,11 +219,15 @@ def parse_data(data):
         step = data["steps"][i]
         step = step.encode("ascii", "ignore").decode() # remove unicode
         sArr = word_tokenize(step)
+
+        for word in sArr:
+            if word in data["ingredients"]: ingredientsInStep.append(word)
+
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
         helperObj = StepHelper()
-        # divide step also by number of actions. hopefully most of these actions have a conjunctive word before 
-        # them, such as, "and".
+
+        # divide step also by number of actions.
         newSteps = helperObj.createNewSteps(actions=actions, oldStep= lemmatized_step)
         
         for newStep in newSteps:
@@ -203,9 +235,9 @@ def parse_data(data):
             tools, newStep = helperObj.FindTools(sentence=newStep, Toolist=Toolist)
             time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
             sArr = word_tokenize(newStep)
+
             #finding ingredients
             ingredientsInStep = []
-            # ingredientsText = ','.join(data["ingredients"])
             for word in sArr:
                 if word in veg or word in non_veg or word in extra: 
                     sArr.remove(word)
@@ -217,11 +249,8 @@ def parse_data(data):
                 if word.lower() in actions:
                     methodInStep= word
                     break
-
-            # print(methodInStep, ingredientsInStep, time, tools)
             
-            # Earlier we substituted "and" for ",". So, there might be parts of sentences like ", and <something>" which converted to 
-            # ", , <something>". Simply resubstituting this will make the sentence look better.
+            # remove double commas
             text = text.replace(",,", "and") 
             sObject = Step(text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
@@ -231,50 +260,85 @@ def parse_data(data):
 
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
-    
+
+
+
+#helper func to substitute property and do a replace on the text (NOT good for step.ingredients since it is a list)
+
+
+
+# def transform(steps, ingredients, transformation):
+#     if transformation == "healthy":
+#         return healthy(steps, ingredients)
+#     elif transformation == "unhealthy":
+#         return unhealthy(steps, ingredients)
+#     elif transformation == "vegetarian":
+#         return vegetarian(steps, ingredients)
+#     elif transformation == "nonvegetarian":
+#         return nonvegetarian(steps, ingredients)
+#     elif transformation == "glutenfree":
+#         return glutenfree(steps, ingredients)
+#     elif transformation == "asian":
+#         return asianfood(steps, ingredients)
+#     elif transformation == "double":
+#         return doubleRecipe(steps, ingredients) 
+#     else:
+#         print("Your request didn't match one of the available options :(")
+#         return None
+
+
+def printRecipe(steps, ingredients):
+    print("Ingredients List")
+    print("____________________________________")
+    for x in ingredients:
+        print(x.text)
+    print(" ")
+
+    print("Directions")
+    print("____________________________________")
+    for i in range(0,len(steps)):
+        print("Step", i+1, ":", steps[i].text)
+    return
+
+
+
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
+    url = None
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
-    # url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
-    # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
-
-    #-----------veg url for nonveg transformations---------------------#
-
-    # grounded beef
-    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
-
-    #shredded baked chicken
-    # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
-
-    #grounded beef
-    # url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
-
-    #grilled
-    # url = "https://www.allrecipes.com/recipe/256728/grilled-portobello-mushrooms-with-mashed-cannellini-beans-and-harissa-sauce/"
-
-    #tofu 
-    url = "https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/"
-
-
-    #---------------------------------------#
-
-
-    #--------------------------------non-veg to veg urls------------------------------------#
-
+    # veg 
+    # url = "https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/"
+    # non-veg
     # url = "https://www.allrecipes.com/recipe/24074/alysias-basic-meat-lasagna/"
 
-    #---------------------------------------------------#
+    # healthy
+    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
-    #takes user input from command line
-    #url = input("Please paste the url of the recipe you want to use:")
+    # takes user input from command line
+    # url = input("Please paste the url of the recipe you want to use:")
 
     rawData = fetch_recipe(url)
     recipe = parse_data(rawData)
+    printRecipe(recipe["steps"],recipe["ingredients"])
+
+
+    # get transformation from user
+    # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
+    # transform(recipe["steps"],recipe["ingredients"], t)
+
     transformObj = Transform()
-    transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    printRecipe(steps, ingredients)
     # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
+
+    # #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
+    # i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
+    # s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
+
+    # transformObj.unhealthy([s], [i])
+    # printRecipe([s], [i])
 
 
 if __name__ == '__main__':
