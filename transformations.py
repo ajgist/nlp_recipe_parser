@@ -17,6 +17,21 @@ nltk.download('omw-1.4')
 from structure import Step, Ingredient
 
 
+replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
+reduceIngredients = ["butter", "vegetable oil", "salt"]
+
+unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta" }
+
+
+
+def substitute(obj, substitution, property):
+          replaceWord = getattr(obj, property)
+          setattr(obj, property, substitution)
+          newText = obj.text.replace(replaceWord, substitution)
+          obj.text = newText
+          return
+
 class Transform():
      def reconstruct(self, texts):
           """
@@ -224,6 +239,91 @@ class Transform():
           #      f.write(output)
 #-----------------------------------------------NON VEGETARIAN TRANSFORMATION END--------------------------------------------------------------#
 
+
+
+     def healthy(self, steps, ingredients):
+          print("making recipe healthy...")
+          """ 
+          ideas:
+          - reduce amount of butter/oil by half??
+
+          - replace unhealty with healthy using dictionary
+    
+          """
+
+          for i in ingredients:
+               #if i.name in reduceIngredients:
+               #    substitute(i, (i.quantity)/2, i.quantity)
+               if i.name in replacementIngredients:
+                    substitute(i, replacementIngredients[i.name], "name")
+    
+          for s in steps:
+               #reducing bad common ingredients - TO DO
+
+
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in replacementIngredients:
+                         s.ingredients[i] = replacementIngredients[si]
+                         s.text = s.text.replace(si, replacementIngredients[si])
+
+          return
+
+     def unhealthy(self, steps, ingredients):
+          print("making recipe unhealthy...")
+          """ 
+          ideas:
+          - replace healty with unhealthy using dictionary
+          """
+
+          for i in ingredients:
+               if i.name in replacementIngredients:
+                    substitute(i, replacementIngredients[i.name], "name")
+
+    
+          for s in steps:
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in unhealthyReplaceIngredients:
+                         s.ingredients[i] = unhealthyReplaceIngredients[si]
+                         s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
+
+        
+               #doubling bad common ingredients? - TO DO
+
+          return
+
+     def glutenfree(self, steps, ingredients):
+          print("making recipe gluten free...")
+          """ 
+          ideas:
+          - replace gluten with gluten free using dictionary
+          """
+
+          for i in ingredients:
+               if i.name in gfReplacementIngredients:
+                    substitute(i, gfReplacementIngredients[i.name], "name")
+
+    
+          for s in steps:
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in gfReplacementIngredients:
+                         s.ingredients[i] = gfReplacementIngredients[si]
+                         s.text = s.text.replace(si, gfReplacementIngredients[si])
+
+          return
+
+     def asianfood(self, steps, ingredients): #some type of cuisine
+
+          return
+
+     def doubleRecipe(self, steps, ingredients):
+
+          return
 
 
 
