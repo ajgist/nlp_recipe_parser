@@ -9,7 +9,7 @@ from nltk.tokenize import TweetTokenizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
-from structure import Step, Ingredient
+# from structure import Step, Ingredient
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
@@ -19,6 +19,23 @@ tools = ['knife', 'over', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for']
 ingredient_stopwords = ['can', 'cans', 'package', 'packages']
+
+class Step:
+  def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
+    self.number = number
+    self.text = text
+    self.method = method #cooking method
+    self.time = time
+    self.ingredients=ingredients
+    self.tools=tools
+
+class Ingredient:
+    def __init__(self, text, name, quantity, unit, descriptors=[]):
+        self.name=name
+        self.text = text
+        self.quantity=quantity
+        self.unit=unit #of measurement
+        self.descriptors=descriptors
 
 
 def fetch_recipe(link):
@@ -116,8 +133,8 @@ def parse_data(data):
         ingredient = data["ingredients"][i]
         iArr = word_tokenize(ingredient)
         print(iArr)
-        descriptors = find_descriptors(iArr)
-        #ingredients = find_name(iArr)
+        #descriptors = find_descriptors(iArr)
+        ingredients = find_name(iArr)
         #quantity, units = find_number_and_units(iArr)
         
         #print(iArr)
