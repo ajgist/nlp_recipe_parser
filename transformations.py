@@ -51,9 +51,11 @@ class Transform():
           """ 
           ideas:
           - find any pre-existing methods in the steps :-
+                    - CASE 0: TOFU
                     - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
                     - CASE 2:check if preheat and grill; we will add grilled chicken to the recipe.
                     - CASE 3: otherwise in ingredients and methods suggest grounded beef.
+                    
                     
           """
           flag = 0
@@ -67,13 +69,52 @@ class Transform():
           number = 0
           L = len(steps)
 
-          # case 1
+          # case 0
+          #-------------------ingredients part-----------------------------#
+          newIngredients = []
+          flag = 0
+          for ingredient in ingredients:
+               if "tofu" in ingredient.text:
+                    if flag == 0:
+                         newIngredients.append(Ingredient(text="1 and 1/2 pounds ground beef"))
+                         flag = 1
+                    else: continue
+               else:
+                    newIngredients.append(ingredient)
+
+          #---------------------end---------------------------------------#
+
+          #------------------steps part--------------------------------------#
+
+          newSteps = []
+          for step in steps:
+               text = re.sub('tofu', "beef", step.text)
+               newSteps.append(text)
+          #-----------------end------------------------------------------#
+
+          
+          print("Printing Ingredients...")
+          for number, ingredient in enumerate(newIngredients):
+               print( number , ":", ingredient.text)
+
+          print("--------------------------------------------------------------------------------")
+
+          print("Printing Instructions...")
+          newSteps = self.reconstruct(newSteps)
+          for number, step in newSteps.items():
+               print( f"Step {number}: ", step)
+
+          print("--------------------------------------------------------------------------------")
+
+
+          if flag == 1: return
           while number < L:
                step = steps[number]
                textInStep[j] = step.text
                methodInStep[j] = step.method
                toolInStep[j] = step.tools
 
+               #case 1
                if flag == 0 and step.method == "preheat" and "oven" in step.tools:
                     # add chicken breast in ingredients
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
@@ -224,6 +265,56 @@ class Transform():
           #      f.write(output)
 #-----------------------------------------------NON VEGETARIAN TRANSFORMATION END--------------------------------------------------------------#
 
+#-----------------------------------------------VEGETARIAN TANSFORMATION-----------------------------------------------------------------------#
+
+     def vegetarian(self, steps, ingredients):
+          print("making recipe vegetarian...")
+          """ 
+          ideas:
+          - find any pre-existing methods in the steps :-
+                    - Remove any meat steps
+                    - add tofu steps
+                    
+                    
+          """
+          #-------------------ingredients part-----------------------------#
+          newIngredients = []
+          meats = ["chicken", "beef", "pork"]
+          flag = 0
+          for ingredient in ingredients:
+               if any(meat in ingredient.text for meat in meats):
+                    if flag == 0:
+                         newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
+                    else: continue
+               else:
+                    newIngredients.append(ingredient)
+
+          #---------------------end---------------------------------------#
+
+          #------------------steps part--------------------------------------#
+
+          meat_descriptors = ["wings", "breast", "ground"] # remove these from step texts
+          newSteps = []
+          for step in steps:
+               text = re.sub('(wings|breast|ground)', '', step.text)
+               text = re.sub('(chicken|beef|pork)', "tofu", text)
+               newSteps.append(text)
+          #-----------------end------------------------------------------#
+
+          
+
+          print("Printing Ingredients...")
+          for number, ingredient in enumerate(newIngredients):
+               print( number , ":", ingredient.text)
+
+          print("--------------------------------------------------------------------------------")
+
+          print("Printing Instructions...")
+          newSteps = self.reconstruct(newSteps)
+          for number, step in newSteps.items():
+               print( f"Step {number}: ", step)
+
+          print("--------------------------------------------------------------------------------")
 
 
 

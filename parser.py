@@ -243,7 +243,7 @@ def main():
     #-----------veg url for nonveg transformations---------------------#
 
     # grounded beef
-    url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
     #shredded baked chicken
     # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
@@ -254,8 +254,18 @@ def main():
     #grilled
     # url = "https://www.allrecipes.com/recipe/256728/grilled-portobello-mushrooms-with-mashed-cannellini-beans-and-harissa-sauce/"
 
+    #tofu 
+    url = "https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/"
+
 
     #---------------------------------------#
+
+
+    #--------------------------------non-veg to veg urls------------------------------------#
+
+    # url = "https://www.allrecipes.com/recipe/24074/alysias-basic-meat-lasagna/"
+
+    #---------------------------------------------------#
 
     #takes user input from command line
     #url = input("Please paste the url of the recipe you want to use:")
@@ -264,6 +274,7 @@ def main():
     recipe = parse_data(rawData)
     transformObj = Transform()
     transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
 
 
 if __name__ == '__main__':
