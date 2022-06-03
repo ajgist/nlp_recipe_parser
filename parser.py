@@ -9,6 +9,7 @@ from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
 from structure import Step, Ingredient
+import string
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
@@ -40,9 +41,6 @@ def fetch_recipe(link):
     steps = []
     for x in stepsRaw[0]: 
         steps.append(x.contents[0])
-
-    '''for x in range(0,len(steps)):
-        print("Step", x+1, ":", steps[x])'''
 
 
     data = {"ingredients": ingredients, "steps": steps}
@@ -94,9 +92,7 @@ def parse_data(data):
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
 
-Toolist = ['plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
-         'baking dishes', 'bags', 'tablespoons', 'teaspoons',
-        'plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
+Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
         'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon']
 
 Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
@@ -110,7 +106,7 @@ def FindTools(sentence):
     return tools
 
 def FindTime(sentence):
-    time = 'None'
+    time = []
     y = nltk.word_tokenize(str(sentence.lower()))
     y = nltk.pos_tag(y)
     for i in range(len(y)):
@@ -123,47 +119,34 @@ def FindTime(sentence):
                 ans = y[pt][0]
                 for j in range(pt + 1, i + 1):
                     ans = ans + " " + y[j][0]
-                time = ans
-    if time != 'None':  return time
+                time.append(ans)
+    if len(time) != 0:  return time
     else: return None
 
-'''def createStep(steps):
-    st = 0
-    for i in steps:
-        st += 1
-        tools = []
-        a = str(i.lower())
-        for item in Toolist:
-            if item in a and item not in tools:
-                tools.append(item)
-        y = nltk.word_tokenize(str(i.lower()))
-        print(i)
-        y = nltk.pos_tag(y)
-        
-        time = 'None'
-        #print(y)
-        for i in range(len(y)):
-            if y[i][0] in Timelist:
-                pt = -1
-                for index in range(i, i - 6, -1):
-                    if index < 0:   break
-                    if y[index][1] == 'CD': pt = index
-                if pt != -1:
-                    ans = y[pt][0]
-                    for j in range(pt + 1, i + 1):
-                        ans = ans + " " + y[j][0]
-                    time = ans
+def checkTheIndexofNumtoChange(sentence, i):
+    s = nltk.word_tokenize(sentence)
+    for j in range(i, i + 6):
+        if j >= len(s):  break
+        if sentence[j] in Timelist:
+            return False
+    return True
 
-        print("step", st, "tools =", tools)
-        print("step", st, "time =", time)
-        print("--------------------------------")'''
-    
+def doubleRecipe(steps, ingredients):
+    for obj in steps:
+        token = nltk.word_tokenize(obj.text)
+        s = nltk.pos_tag(token)
+        for i in range(len(s)):
+            if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i):
+                token[i] = str(2 * int(token[i]))
+        obj.text = "".join([" "+i if not i.startswith("'") and i not in string.punctuation else i for i in token]).strip()
+    return
+
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
-    url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
+    url = 'https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/' 
     #takes user input from command line
     #url = input("Please paste the url of the recipe you want to use:")
 
