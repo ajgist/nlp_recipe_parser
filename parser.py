@@ -46,7 +46,7 @@ proteins = ['meat', 'chicken', 'tofu', 'fish']
 ingredient_stopwords = ['can', 'cans', 'package', 'packages']
 
 measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
-extra = ['seasoning', 'broth', 'juice', 'tomato']
+extra = ['seasoning', 'broth', 'juice', 'tomato', 'beef', 'bacon']
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
@@ -253,6 +253,8 @@ def parse_data(data):
 
 
     sList = []
+    ingredientInIngredients = [ingredient.name for ingredient in sList] # new step
+
     lemmatizer = WordNetLemmatizer()
     ingredientsNames = [ingredient.name for ingredient in iList]
 
@@ -275,6 +277,8 @@ def parse_data(data):
             time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
             ingredientsInStep = helperObj.FindIngredients(text=text, ingredientsNames=ingredientsNames, newStep=newStep, veg= veg, non_veg=non_veg, extra=extra)
 
+            ingredientsInStep += ingredientInIngredients #new step
+
             #finding method of preparation, separate preparation into 1. period before an action 2. action 3. result following action
             methodInStep = None
             for word in sArr:
@@ -287,6 +291,7 @@ def parse_data(data):
             sObject = Step(text=text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
+            # print("Text:",text, "\n Method:", methodInStep, "\n Time:", time, "\n Ingredients:", ingredientsInStep, "\nTool:",tools)
 
     return iList, sList
 
@@ -357,7 +362,8 @@ def printStep(s):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    url = "https://www.allrecipes.com/recipe/228285/teriyaki-salmon/"
+    url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
+
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
 
@@ -375,6 +381,7 @@ def main():
 
 
     rawData = fetch_recipe(url)
+
     ingredients, steps = parse_data(rawData)
     printRecipe(steps,ingredients)
 
