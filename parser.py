@@ -256,6 +256,7 @@ def parse_data(data):
     ingredientInIngredients = [ingredient.name for ingredient in sList] # new step
 
     lemmatizer = WordNetLemmatizer()
+    ingredientsNames = [ingredient.name for ingredient in iList]
 
     j = 0
     for i in range(0, len(data["steps"])):
@@ -274,14 +275,7 @@ def parse_data(data):
             text = newStep
             tools, newStep = helperObj.FindTools(sentence=newStep, Toolist=Toolist)
             time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
-            sArr = word_tokenize(newStep)
-
-            #finding ingredients
-            ingredientsInStep = []
-            for word in sArr:
-                if word in veg or word in non_veg or word in extra: 
-                    sArr.remove(word)
-                    ingredientsInStep.append(word)
+            ingredientsInStep = helperObj.FindIngredients(text=text, ingredientsNames=ingredientsNames, newStep=newStep, veg= veg, non_veg=non_veg, extra=extra)
 
             ingredientsInStep += ingredientInIngredients #new step
 
@@ -294,7 +288,7 @@ def parse_data(data):
             
             # remove double commas
             text = text.replace(",,", "and") 
-            sObject = Step(text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
+            sObject = Step(text=text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
             # print("Text:",text, "\n Method:", methodInStep, "\n Time:", time, "\n Ingredients:", ingredientsInStep, "\nTool:",tools)
@@ -397,8 +391,8 @@ def main():
     for i in ingredients:
        printIngredient(i)
 
-    #for s in steps:
-    #    printStep(s)
+    for s in steps:
+       printStep(s)
 
 
     #get transformation from user
@@ -406,18 +400,13 @@ def main():
 
 
     # transformObj = Transform()
-    # ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
-    # printRecipe(steps, ingredients)
-    # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
-
-    transformObj = Transform()
     # ingredientsNV, stepsNV = transformObj.nonvegetarian(steps,ingredients)
     # printRecipe(stepsNV, ingredientsNV)
     # transformObj.vegetarian(steps,ingredients)
 
     #printRecipe(steps, ingredients)
-    transformObj.unhealthy(steps, ingredients)
-    printRecipe(steps, ingredients)
+    # transformObj.unhealthy(steps, ingredients)
+    # printRecipe(steps, ingredients)
 
 
 if __name__ == '__main__':
