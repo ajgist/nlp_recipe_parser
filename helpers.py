@@ -73,7 +73,18 @@ class StepHelper():
                return time, sentence
           else: return None, sentence
 
+     def FindIngredients(self, text, ingredientsNames,newStep, veg, non_veg, extra):
+          ingredientsNamesInStep = [name for name in ingredientsNames if name in text]
+          sArr = word_tokenize(newStep)
 
-
+          #finding ingredients
+          ingredientsInStep = []
+          for word in sArr:
+               if word in veg or word in non_veg or word in extra: 
+                    if not any(word in name for name in ingredientsNamesInStep):
+                         ingredientsInStep.append(word)
+          
+          ingredientsInStep += ingredientsNamesInStep
+          return ingredientsInStep
 
 #----------------------------------Steps Helper functions End-------------------------------------------------------------------------#

@@ -254,15 +254,13 @@ def parse_data(data):
 
     sList = []
     lemmatizer = WordNetLemmatizer()
+    ingredientsNames = [ingredient.name for ingredient in iList]
 
     j = 0
     for i in range(0, len(data["steps"])):
         step = data["steps"][i]
         step = step.encode("ascii", "ignore").decode() # remove unicode
         sArr = word_tokenize(step)
-
-        for word in sArr:
-            if word in data["ingredients"]: ingredientsInStep.append(word)
 
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
@@ -275,14 +273,7 @@ def parse_data(data):
             text = newStep
             tools, newStep = helperObj.FindTools(sentence=newStep, Toolist=Toolist)
             time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
-            sArr = word_tokenize(newStep)
-
-            #finding ingredients
-            ingredientsInStep = []
-            for word in sArr:
-                if word in veg or word in non_veg or word in extra: 
-                    sArr.remove(word)
-                    ingredientsInStep.append(word)
+            ingredientsInStep = helperObj.FindIngredients(text=text, ingredientsNames=ingredientsNames, newStep=newStep, veg= veg, non_veg=non_veg, extra=extra)
 
             #finding method of preparation, separate preparation into 1. period before an action 2. action 3. result following action
             methodInStep = None
@@ -293,7 +284,7 @@ def parse_data(data):
             
             # remove double commas
             text = text.replace(",,", "and") 
-            sObject = Step(text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
+            sObject = Step(text=text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
 
@@ -393,22 +384,22 @@ def main():
     for i in ingredients:
        printIngredient(i)
 
-    #for s in steps:
-    #    printStep(s)
+    for s in steps:
+       printStep(s)
 
 
     #get transformation from user
     # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
 
 
-    transformObj = Transform()
+    # transformObj = Transform()
     # ingredientsNV, stepsNV = transformObj.nonvegetarian(steps,ingredients)
     # printRecipe(stepsNV, ingredientsNV)
     # transformObj.vegetarian(steps,ingredients)
 
     #printRecipe(steps, ingredients)
-    transformObj.unhealthy(steps, ingredients)
-    printRecipe(steps, ingredients)
+    # transformObj.unhealthy(steps, ingredients)
+    # printRecipe(steps, ingredients)
 
 
 if __name__ == '__main__':

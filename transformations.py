@@ -236,7 +236,7 @@ class Transform():
           """
           #ingredients part
           newIngredients = []
-          meats = ["chicken", "beef", "pork"]
+          meats = ["chicken", "beef", "pork", "ground beef", "ground chicken", "ground pork"]
           flag = 0
           for ingredient in ingredients:
                if any(meat in ingredient.text for meat in meats):
