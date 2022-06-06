@@ -44,7 +44,7 @@ with open("nonveg.txt", "r") as f:
 proteins = ['meat', 'chicken', 'tofu', 'fish']
 
 measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
-extra = ['seasoning', 'broth', 'juice', 'tomato']
+extra = ['seasoning', 'broth', 'juice', 'tomato', 'beef', 'bacon']
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
 actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
@@ -212,6 +212,8 @@ def parse_data(data):
 
 
     sList = []
+    ingredientInIngredients = [ingredient.name for ingredient in sList] # new step
+
     lemmatizer = WordNetLemmatizer()
 
     j = 0
@@ -219,9 +221,6 @@ def parse_data(data):
         step = data["steps"][i]
         step = step.encode("ascii", "ignore").decode() # remove unicode
         sArr = word_tokenize(step)
-
-        for word in sArr:
-            if word in data["ingredients"]: ingredientsInStep.append(word)
 
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
@@ -243,6 +242,8 @@ def parse_data(data):
                     sArr.remove(word)
                     ingredientsInStep.append(word)
 
+            ingredientsInStep += ingredientInIngredients #new step
+
             #finding method of preparation, separate preparation into 1. period before an action 2. action 3. result following action
             methodInStep = None
             for word in sArr:
@@ -255,6 +256,7 @@ def parse_data(data):
             sObject = Step(text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
+            # print("Text:",text, "\n Method:", methodInStep, "\n Time:", time, "\n Ingredients:", ingredientsInStep, "\nTool:",tools)
 
     
 
@@ -305,7 +307,7 @@ def printRecipe(steps, ingredients):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    url = None
+    url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
     # veg 
@@ -321,16 +323,16 @@ def main():
 
     rawData = fetch_recipe(url)
     recipe = parse_data(rawData)
-    printRecipe(recipe["steps"],recipe["ingredients"])
+    # printRecipe(recipe["steps"],recipe["ingredients"])
 
 
     # get transformation from user
     # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
     # transform(recipe["steps"],recipe["ingredients"], t)
 
-    transformObj = Transform()
-    ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
-    printRecipe(steps, ingredients)
+    # transformObj = Transform()
+    # ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    # printRecipe(steps, ingredients)
     # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
 
     # #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
