@@ -48,7 +48,7 @@ ingredient_stopwords = ['can', 'cans', 'package', 'packages']
 measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
 extra = ['seasoning', 'broth', 'juice', 'tomato', 'beef', 'bacon']
 tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
-actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
+actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'ladle', 'arrange', 'adjust']
 prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
 
 Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
@@ -301,24 +301,24 @@ def parse_data(data):
 
 
 
-# def transform(steps, ingredients, transformation):
-#     if transformation == "healthy":
-#         return healthy(steps, ingredients)
-#     elif transformation == "unhealthy":
-#         return unhealthy(steps, ingredients)
-#     elif transformation == "vegetarian":
-#         return vegetarian(steps, ingredients)
-#     elif transformation == "nonvegetarian":
-#         return nonvegetarian(steps, ingredients)
-#     elif transformation == "glutenfree":
-#         return glutenfree(steps, ingredients)
-#     elif transformation == "asian":
-#         return asianfood(steps, ingredients)
-#     elif transformation == "double":
-#         return doubleRecipe(steps, ingredients) 
-#     else:
-#         print("Your request didn't match one of the available options :(")
-#         return None
+def transform(steps, ingredients, transformation, obj):
+    if transformation == "healthy":
+        return obj.healthy(steps, ingredients)
+    elif transformation == "unhealthy":
+        return obj.unhealthy(steps, ingredients)
+    elif transformation == "vegetarian":
+        return obj.vegetarian(steps, ingredients)
+    elif transformation == "nonvegetarian":
+        return obj.nonvegetarian(steps, ingredients)
+    elif transformation == "glutenfree":
+        return obj.glutenfree(steps, ingredients)
+    elif transformation == "asian":
+        return obj.asianfood(steps, ingredients)
+    elif transformation == "double":
+        return obj.doubleRecipe(steps, ingredients) 
+    else:
+        print("Your request didn't match one of the available options :(")
+        return None
 
 
 def printRecipe(steps, ingredients):
@@ -362,7 +362,7 @@ def printStep(s):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
+    # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
 
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
@@ -377,7 +377,7 @@ def main():
     # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
     # takes user input from command line
-    # url = input("Please paste the url of the recipe you want to use:")
+    url = input("Please paste the url of the recipe you want to use:")
 
 
     rawData = fetch_recipe(url)
@@ -395,18 +395,13 @@ def main():
        printStep(s)
 
 
-    #get transformation from user
-    # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
+    # get transformation from user
+    t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
 
 
-    # transformObj = Transform()
-    # ingredientsNV, stepsNV = transformObj.nonvegetarian(steps,ingredients)
-    # printRecipe(stepsNV, ingredientsNV)
-    # transformObj.vegetarian(steps,ingredients)
-
-    #printRecipe(steps, ingredients)
-    # transformObj.unhealthy(steps, ingredients)
-    # printRecipe(steps, ingredients)
+    transformObj = Transform()
+    ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
+    printRecipe(stepsT, ingredientsT)
 
 
 if __name__ == '__main__':
