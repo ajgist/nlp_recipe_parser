@@ -11,24 +11,8 @@ from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
 from structure import Step, Ingredient
-
-
-from helpers import StepHelper
-from transformations import Transform
-from structure import Step, Ingredient
-
-
-#for nltk import errors
-import ssl
-try:
-    _create_unverified_https_context = ssl._create_unverified_context
-except AttributeError:
-    pass
-else:
-    ssl._create_default_https_context = _create_unverified_https_context
-nltk.download('wordnet')
-nltk.download('omw-1.4')
-
+import string
+from nltk.tokenize.treebank import TreebankWordDetokenizer
 
 transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
 
@@ -42,21 +26,6 @@ with open("nonveg.txt", "r") as f:
   non_veg = content.split(",")
 
 proteins = ['meat', 'chicken', 'tofu', 'fish']
-
-measurements = ['cup', 'tablespoon', 'teaspoon', 'pound', 'ounce', 'cups', 'tablespoons', 'teaspoons', 'pounds', 'ounces', 'cloves', 'clove'] #should also consider no unit (ex 1 lemon)
-extra = ['seasoning', 'broth', 'juice', 'tomato']
-tools = ['knife', 'oven', 'pan', 'bowl', 'skillet', 'plate', 'microwave']
-actions = ['shred', 'dice', 'place', 'preheat', 'cook', 'set', 'stir', 'heat', 'whisk', 'mix', 'add', 'drain', 'pour', 'sprinkle', 'reduce', 'transfer', 'season', 'discard', 'saute', 'cover', 'simmer', 'combine', 'layer', 'lay', 'finish', 'bake', 'uncover', 'continue', 'marinate', 'strain', 'reserve', 'dry', 'scrape', 'return', 'bring', 'melt', 'microwave', 'sit', 'squeeze', 'seal', 'brush', 'broil', 'serve', 'turn', 'scramble', 'toss', 'break', 'repeat', 'crush', 'moisten', 'press', 'open', 'leave', 'refrigerate', 'grate', 'salt', 'ladle', 'arrange', 'adjust']
-prepositions = ['of', 'and', 'in', 'until', 'for', 'to', 'on']
-
-Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
-        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon', 
-          'plates', 'bowls', 'whisks', 'saucepans', 'pots', 'spoons', 'knives', 'skillet', 'skillets',
-         'baking dishes', 'bags', 'tablespoons', 'teaspoons', 'baking sheet', "grill"]
-Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
-
-
-
 
 def fetch_recipe(link):
     html = requests.get(url = link).text
@@ -82,9 +51,6 @@ def fetch_recipe(link):
         contents = x.contents[0]
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
-
-    '''for x in range(0,len(steps)):
-        print("Step", x+1, ":", steps[x])'''
 
 
     data = {"ingredients": ingredients, "steps": steps}
@@ -261,11 +227,39 @@ def parse_data(data):
     recipe = {"ingredients": iList, "steps": sList}
     return recipe
 
+Toolist = ['plate', 'bowl', 'microwave', 'pan', 'whisk', 'saucepan', 'pot', 'spoon', 'knive',
+        'oven', 'refrigerator', 'paper towels', 'baking dish', 'bag', 'tablespoon', 'teaspoon']
+
+Timelist = ['second', 'seconds', 'minute', 'minutes', 'hour', 'hours', 'day', 'days']
 
 
 #helper func to substitute property and do a replace on the text (NOT good for step.ingredients since it is a list)
 
+def checkTheIndexofNumtoChange(sentence, i):
+    s = nltk.word_tokenize(sentence)
+    for j in range(i, i + 6):
+        if j >= len(s):  break
+        if sentence[j] in Timelist:
+            return False
+    return True
 
+def doubleRecipe(steps, ingredients):
+    for obj in steps:
+        token = nltk.word_tokenize(obj.text)
+        s = nltk.pos_tag(token)
+        for i in range(len(s)):
+            if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i):
+                token[i] = str(2 * int(token[i]))
+        obj.text = TreebankWordDetokenizer().detokenize(token)
+    
+    for obj in ingredients:
+        token = nltk.word_tokenize(obj.text)
+        s = nltk.pos_tag(token)
+        for i in range(len(s)):
+           if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i):
+                token[i] = str(2 * int(token[i]))
+        obj.text = TreebankWordDetokenizer().detokenize(token) 
+    return
 
 # def transform(steps, ingredients, transformation):
 #     if transformation == "healthy":
