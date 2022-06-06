@@ -185,7 +185,7 @@ def parse_data(data):
     """
     iList = []
     for i in range(0, len(data["ingredients"])):
-        ingredient = data["ingredients"][i]
+        ingredient = data["ingredients"][i] 
         iArr = word_tokenize(ingredient)
         quantity, units = find_number_and_units(iArr)
         
@@ -288,13 +288,15 @@ def parse_data(data):
 
 
 def printRecipe(steps, ingredients):
-    print("Ingredients List")
+    print(" ")
+    print("____________________________________")
+    print("__________Ingredients List__________")
     print("____________________________________")
     for x in ingredients:
         print(x.text)
     print(" ")
-
-    print("Directions")
+    print("____________________________________")
+    print("____________Directions______________")
     print("____________________________________")
     for i in range(0,len(steps)):
         print("Step", i+1, ":", steps[i].text)
@@ -305,7 +307,7 @@ def printRecipe(steps, ingredients):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    url = None
+    #url = None
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
     # veg 
@@ -319,9 +321,9 @@ def main():
     # takes user input from command line
     # url = input("Please paste the url of the recipe you want to use:")
 
-    rawData = fetch_recipe(url)
-    recipe = parse_data(rawData)
-    printRecipe(recipe["steps"],recipe["ingredients"])
+    #rawData = fetch_recipe(url)
+    #recipe = parse_data(rawData)
+    #printRecipe(recipe["steps"],recipe["ingredients"])
 
 
     # get transformation from user
@@ -329,16 +331,17 @@ def main():
     # transform(recipe["steps"],recipe["ingredients"], t)
 
     transformObj = Transform()
-    ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
-    printRecipe(steps, ingredients)
+    #ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    #printRecipe(steps, ingredients)
     # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
 
     # #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
-    # i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
-    # s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
-
-    # transformObj.unhealthy([s], [i])
-    # printRecipe([s], [i])
+    i = Ingredient("4 tablespoons canadian bacon, divided", "canadian bacon", 4.0, "tablespoons", ['divided'])
+    s = Step("Heat 2 tablespoons of the canadian bacon in a large skillet over medium high heat.", 2, "heat", 0, ['canadian bacon'], ['skillet'])
+    
+    printRecipe([s], [i])
+    transformObj.unhealthy([s], [i])
+    printRecipe([s], [i])
 
 
 if __name__ == '__main__':

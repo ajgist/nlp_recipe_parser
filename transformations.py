@@ -309,8 +309,8 @@ class Transform():
           """
 
           for i in ingredients:
-               if i.name in replacementIngredients:
-                    substitute(i, replacementIngredients[i.name], "name")
+               if i.name in unhealthyReplaceIngredients:
+                    substitute(i, unhealthyReplaceIngredients[i.name], "name")
 
     
           for s in steps:
