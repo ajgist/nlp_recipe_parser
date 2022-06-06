@@ -42,9 +42,8 @@ def fetch_recipe(link):
     for x in ingredientsRaw:
         ingredients.append(x.contents[0])
 
-    print("Ingredients List")
-    for x in ingredients:
-        print(x)
+    # for x in ingredients:
+    #     print(x)
 
     steps = []
     for x in stepsRaw[0]: 
@@ -152,14 +151,14 @@ def parse_data(data):
     """
     iList = []
     for i in range(0, len(data["ingredients"])):
-        ingredient = data["ingredients"][i]
+        ingredient = data["ingredients"][i] 
         iArr = word_tokenize(ingredient)
         quantity, units = find_number_and_units(iArr)
         
 
-        print(iArr)
-        print(quantity, units)
-        print("____________________________")
+        # print(iArr)
+        # print(quantity, units)
+        # print("____________________________")
 
         iObject = Ingredient(text=data["ingredients"][i])
         iList.append(iObject)
@@ -190,14 +189,11 @@ def parse_data(data):
         for word in sArr:
             if word in data["ingredients"]: ingredientsInStep.append(word)
 
-        #sObject = Step(i, "method goes here")
-        #sList.append(sObject)
-
         # lemmatize 
         lemmatized_step = ' '.join([lemmatizer.lemmatize(w) for w in sArr])
         helperObj = StepHelper()
-        # divide step also by number of actions. hopefully most of these actions have a conjunctive word before 
-        # them, such as, "and".
+
+        # divide step also by number of actions.
         newSteps = helperObj.createNewSteps(actions=actions, oldStep= lemmatized_step)
         
         for newStep in newSteps:
@@ -205,9 +201,9 @@ def parse_data(data):
             tools, newStep = helperObj.FindTools(sentence=newStep, Toolist=Toolist)
             time, newStep = helperObj.FindTime(sentence=newStep, Timelist=Timelist)
             sArr = word_tokenize(newStep)
+
             #finding ingredients
             ingredientsInStep = []
-            # ingredientsText = ','.join(data["ingredients"])
             for word in sArr:
                 if word in veg or word in non_veg or word in extra: 
                     sArr.remove(word)
@@ -219,11 +215,8 @@ def parse_data(data):
                 if word.lower() in actions:
                     methodInStep= word
                     break
-
-            # print(methodInStep, ingredientsInStep, time, tools)
             
-            # Earlier we substituted "and" for ",". So, there might be parts of sentences like ", and <something>" which converted to 
-            # ", , <something>". Simply resubstituting this will make the sentence look better.
+            # remove double commas
             text = text.replace(",,", "and") 
             sObject = Step(text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
@@ -268,34 +261,36 @@ def doubleRecipe(steps, ingredients):
         obj.text = TreebankWordDetokenizer().detokenize(token) 
     return
 
-def transform(steps, ingredients, transformation):
-    if transformation == "healthy":
-        return healthy(steps, ingredients)
-    elif transformation == "unhealthy":
-        return unhealthy(steps, ingredients)
-    elif transformation == "vegetarian":
-        return vegetarian(steps, ingredients)
-    elif transformation == "nonvegetarian":
-        return nonvegetarian(steps, ingredients)
-    elif transformation == "glutenfree":
-        return glutenfree(steps, ingredients)
-    elif transformation == "asian":
-        return asianfood(steps, ingredients)
-    elif transformation == "double":
-        return doubleRecipe(steps, ingredients) 
-    else:
-        print("Your request didn't match one of the available options :(")
-        return None
+# def transform(steps, ingredients, transformation):
+#     if transformation == "healthy":
+#         return healthy(steps, ingredients)
+#     elif transformation == "unhealthy":
+#         return unhealthy(steps, ingredients)
+#     elif transformation == "vegetarian":
+#         return vegetarian(steps, ingredients)
+#     elif transformation == "nonvegetarian":
+#         return nonvegetarian(steps, ingredients)
+#     elif transformation == "glutenfree":
+#         return glutenfree(steps, ingredients)
+#     elif transformation == "asian":
+#         return asianfood(steps, ingredients)
+#     elif transformation == "double":
+#         return doubleRecipe(steps, ingredients) 
+#     else:
+#         print("Your request didn't match one of the available options :(")
+#         return None
 
 
 def printRecipe(steps, ingredients):
-    print("Ingredients List")
+    print(" ")
+    print("____________________________________")
+    print("__________Ingredients List__________")
     print("____________________________________")
     for x in ingredients:
         print(x.text)
     print(" ")
-
-    print("Directions")
+    print("____________________________________")
+    print("____________Directions______________")
     print("____________________________________")
     for i in range(0,len(steps)):
         print("Step", i+1, ":", steps[i].text)
@@ -306,51 +301,41 @@ def printRecipe(steps, ingredients):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
+    #url = None
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
 
-    url = 'https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/' 
-    #takes user input from command line
-    #url = input("Please paste the url of the recipe you want to use:")
+    # veg 
+    # url = "https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/"
+    # non-veg
+    # url = "https://www.allrecipes.com/recipe/24074/alysias-basic-meat-lasagna/"
+
+    # healthy
+    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+
+    # takes user input from command line
+    # url = input("Please paste the url of the recipe you want to use:")
 
     #rawData = fetch_recipe(url)
-    #parse_data(rawData)
-
-    #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
-    i = Ingredient("4 tablespoons olive oil, divided", "olive oil", 4.0, "tablespoons", ['divided'])
-    s = Step("Heat 2 tablespoons of the oil in a large skillet over medium high heat.", 2, "heat", 0, ['oil'], ['skillet'])
- 
-    #unhealthy([s], [i])
-    #printRecipe([s], [i])
+    #recipe = parse_data(rawData)
+    #printRecipe(recipe["steps"],recipe["ingredients"])
 
 
-    url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
+    # get transformation from user
+    # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
+    # transform(recipe["steps"],recipe["ingredients"], t)
 
-    rawData = fetch_recipe(url)
-    recipe = parse_data(rawData)
     transformObj = Transform()
-    #transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    #ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
+    #printRecipe(steps, ingredients)
+    # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
 
+    # #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
+    i = Ingredient("4 tablespoons canadian bacon, divided", "canadian bacon", 4.0, "tablespoons", ['divided'])
+    s = Step("Heat 2 tablespoons of the canadian bacon in a large skillet over medium high heat.", 2, "heat", 0, ['canadian bacon'], ['skillet'])
+    
     printRecipe([s], [i])
     transformObj.unhealthy([s], [i])
     printRecipe([s], [i])
-    
-    return
-
-#-----------veg url for nonveg transformations---------------------#
-    # grounded beef
-    
-    #shredded baked chicken
-    # url = "https://www.allrecipes.com/recipe/21528/pesto-pizza/"
-    #grounded beef
-    # url = "https://www.allrecipes.com/recipe/244973/summer-bounty-pasta/"
-    #grilled
-    # url = "https://www.allrecipes.com/recipe/256728/grilled-portobello-mushrooms-with-mashed-cannellini-beans-and-harissa-sauce/"
-    
-    #------
-    # url = 'https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/' 
-    # url = "https://www.allrecipes.com/recipe/13125/chinese-sizzling-rice-soup/"
-    #---------------------------------------#
-
 
 
 if __name__ == '__main__':

@@ -41,7 +41,7 @@ class Transform():
           idea: If a step is has 4 or less words, then carry on the next step into the same step        
           """
 
-          newTexts = {}
+          newTexts = []
           i = 0
           j = 0
           L = len(texts)
@@ -53,9 +53,8 @@ class Transform():
                if word_count <= 4 and i+1<L:
                     newText += " and " + texts[i+1].lower()
                     i += 1
-               newTexts[j] = newText
+               newTexts.append(Step(text= newText))
                i += 1
-               j += 1
           
           return newTexts
 
@@ -66,9 +65,11 @@ class Transform():
           """ 
           ideas:
           - find any pre-existing methods in the steps :-
+                    - CASE 0: TOFU
                     - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
                     - CASE 2:check if preheat and grill; we will add grilled chicken to the recipe.
                     - CASE 3: otherwise in ingredients and methods suggest grounded beef.
+                    
                     
           """
           flag = 0
@@ -82,13 +83,38 @@ class Transform():
           number = 0
           L = len(steps)
 
-          # case 1
+          #case 0
+          #ingredients part; search for tofu
+          newIngredients = []
+          flag = 0
+          for ingredient in ingredients:
+               if "tofu" in ingredient.text:
+                    if flag == 0:
+                         newIngredients.append(Ingredient(text="1 and 1/2 pounds ground beef"))
+                         flag = 1
+                    else: continue
+               else:
+                    newIngredients.append(ingredient)
+
+
+          #steps part if tofu present
+          if flag == 1:
+               newSteps = []
+               for step in steps:
+                    text = re.sub('tofu', "beef", step.text)
+                    newSteps.append(Step(text=text))
+         
+               
+               return ( newSteps, newIngredients )
+
+          # other cases
           while number < L:
                step = steps[number]
                textInStep[j] = step.text
                methodInStep[j] = step.method
                toolInStep[j] = step.tools
 
+               #case 1
                if flag == 0 and step.method == "preheat" and "oven" in step.tools:
                     # add chicken breast in ingredients
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
@@ -185,60 +211,65 @@ class Transform():
                               textInStep[j] = suggestedInstruction
                               flag = 1
 
-               # print( j , ":" , textInStep[j])
                j += 1
                number += 1
 
+          newSteps = self.reconstruct(textInStep)
+         
+          return ( ingredients, newSteps )
+
+          
+#-----------------------------------------------NON VEGETARIAN TRANSFORMATION END--------------------------------------------------------------#
+
+#-----------------------------------------------VEGETARIAN TANSFORMATION-----------------------------------------------------------------------#
+
+     def vegetarian(self, steps, ingredients):
+          print("making recipe vegetarian...")
+          """ 
+          ideas:
+          - find any pre-existing methods in the steps :-
+                    - Remove any meat steps
+                    - add tofu steps
+                    
+                    
+          """
+          #ingredients part
+          newIngredients = []
+          meats = ["chicken", "beef", "pork"]
+          flag = 0
+          for ingredient in ingredients:
+               if any(meat in ingredient.text for meat in meats):
+                    if flag == 0:
+                         newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
+                    else: continue
+               else:
+                    newIngredients.append(ingredient)
+
+
+          #steps part
+
+          meat_descriptors = ["wings", "breast", "ground"] # remove these from step texts
+          newSteps = []
+          for step in steps:
+               text = re.sub('(wings|breast|ground)', '', step.text)
+               text = re.sub('(chicken|beef|pork)', "tofu", text)
+               newSteps.append(text)
+          
 
           print("Printing Ingredients...")
-          for number, ingredient in enumerate(ingredients):
+          for number, ingredient in enumerate(newIngredients):
                print( number , ":", ingredient.text)
 
           print("--------------------------------------------------------------------------------")
 
           print("Printing Instructions...")
-          newTextInStep = self.reconstruct(textInStep)
-          for number, step in newTextInStep.items():
+          newSteps = self.reconstruct(newSteps)
+          for number, step in newSteps.items():
                print( f"Step {number}: ", step)
 
           print("--------------------------------------------------------------------------------")
 
-          # # html output
-
-          # wrapper = """
-          #           <html>
-          #           <header>
-          #           Recipe: Non Vegetarian Transformation
-          #           </header>
-          #           <body>
-          #           <title> Ingredients </title>
-          #                {{htmlText}}
-          #           </body>
-          #           </html>
-          #           """
-
-          # file_loader = FileSystemLoader('templates')
-          # env = Environment(loader=file_loader)
-
-          # htmlLines = ["<ul>"]
-          # for ingredient in ingredients:
-          #      textLine = ingredient.text
-          #      htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-          # htmlLines.append("</ul>")
-          # htmlText = '\n'.join(htmlLines)
-
-          # with open("templates/ingredients.txt",'w') as f:
-          #      f.write(wrapper)
-          
-
-
-          # template = env.get_template("ingredients.txt")
-          # output = template.render(htmlText = htmlText)
-          
-          # with open("ingredients.html",'w') as f:
-          #      f.write(output)
-#-----------------------------------------------NON VEGETARIAN TRANSFORMATION END--------------------------------------------------------------#
-
+#----------------------------------------------------------------END------------------------------------------#
 
 
      def healthy(self, steps, ingredients):
@@ -278,8 +309,8 @@ class Transform():
           """
 
           for i in ingredients:
-               if i.name in replacementIngredients:
-                    substitute(i, replacementIngredients[i.name], "name")
+               if i.name in unhealthyReplaceIngredients:
+                    substitute(i, unhealthyReplaceIngredients[i.name], "name")
 
     
           for s in steps:
