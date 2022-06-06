@@ -21,8 +21,9 @@ replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "but
 reduceIngredients = ["butter", "vegetable oil", "salt"]
 
 unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
-gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta" }
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles" }
 
+healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
 
 def substitute(obj, substitution, property):
@@ -286,6 +287,7 @@ class Transform():
                #if i.name in reduceIngredients:
                #    substitute(i, (i.quantity)/2, i.quantity)
                if i.name in replacementIngredients:
+                    print("Replacing", i.name, "with", replacementIngredients[i.name], "!")
                     substitute(i, replacementIngredients[i.name], "name")
     
           for s in steps:
@@ -310,6 +312,7 @@ class Transform():
 
           for i in ingredients:
                if i.name in unhealthyReplaceIngredients:
+                    print("Replacing", i.name, "with", unhealthyReplaceIngredients[i.name], "!")
                     substitute(i, unhealthyReplaceIngredients[i.name], "name")
 
     
@@ -335,6 +338,7 @@ class Transform():
 
           for i in ingredients:
                if i.name in gfReplacementIngredients:
+                    print("Replacing", i.name, "with", gfReplacementIngredients[i.name], "!")
                     substitute(i, gfReplacementIngredients[i.name], "name")
 
     

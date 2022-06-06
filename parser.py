@@ -32,8 +32,6 @@ nltk.download('omw-1.4')
 
 
 
-transformations = ['VEGETARIAN', 'NONVEG', 'VEGAN', 'NONVEGAN', 'NEWSTYLE', 'DOUBLE', 'HALVE']
-
 veg = []
 with open("veg.txt", "r") as f:
   content = f.read()
@@ -76,19 +74,12 @@ def fetch_recipe(link):
     for x in ingredientsRaw:
         ingredients.append(x.contents[0])
 
-    # for x in ingredients:
-    #     print(x)
-
     steps = []
     for x in stepsRaw[0]: 
         # split the multiple sentences in a step into multiple steps
         contents = x.contents[0]
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
-
-    '''for x in range(0,len(steps)):
-        print("Step", x+1, ":", steps[x])'''
-
 
     data = {"ingredients": ingredients, "steps": steps}
     return data
@@ -121,8 +112,11 @@ def parse_data(data):
                 ingredient = ingredient + iArr[i] + " "
         if ingredient == "":
             ingredient = iArr[len(iArr)-1]
+
+        #this takes away last space after name - important for substitutions later
+        else: ingredient = ingredient[0:len(ingredient)-1]
                     
-        print("ingredient name: " + ingredient)
+        #print("ingredient name: " + ingredient)
         return ingredient
                 
     def find_descriptors(iArr):
@@ -139,7 +133,7 @@ def parse_data(data):
                 checker = True
             elif checker:
                 descriptor = descriptor + iArr[i] + " "
-        print("descriptors: " + descriptor)
+        #print("descriptors: " + descriptor)
         return descriptor
        
 
@@ -234,13 +228,14 @@ def parse_data(data):
         ingredient = data["ingredients"][i] 
         iArr = word_tokenize(ingredient)
         quantity, units = find_number_and_units(iArr)
-        
+        name = find_name(iArr)
+        descriptors = [find_descriptors(iArr)]
 
         # print(iArr)
         # print(quantity, units)
         # print("____________________________")
 
-        iObject = Ingredient(text=data["ingredients"][i])
+        iObject = Ingredient(text=data["ingredients"][i], name=name, quantity=quantity, unit=units, descriptors=descriptors)
         iList.append(iObject)
 
 
@@ -302,10 +297,7 @@ def parse_data(data):
             j += 1
             sList.append(sObject)
 
-    
-
-    recipe = {"ingredients": iList, "steps": sList}
-    return recipe
+    return iList, sList
 
 
 
@@ -335,17 +327,38 @@ def parse_data(data):
 
 def printRecipe(steps, ingredients):
     print(" ")
-    print("____________________________________")
-    print("__________Ingredients List__________")
-    print("____________________________________")
+    print("------------------------------------")
+    print("----------Ingredients List----------")
+    print("------------------------------------")
     for x in ingredients:
         print(x.text)
     print(" ")
-    print("____________________________________")
-    print("____________Directions______________")
-    print("____________________________________")
+    print("------------------------------------")
+    print("-------------Directions-------------")
+    print("------------------------------------")
     for i in range(0,len(steps)):
         print("Step", i+1, ":", steps[i].text)
+    return
+
+def printIngredient(i):
+    print(" -ingredient- ")
+    print("text:", i.text)
+    print("name:", i.name)
+    print("quantity:", i.quantity)
+    print("units:", i.unit)
+    print("descrips:", i.descriptors)
+    print(" ")
+    return
+
+def printStep(s):
+    print(" -step- ")
+    print("text:", s.text)
+    print("number:", s.number)
+    print("method:", s.method)
+    print("time:", s.time)
+    print("ingreds:", s.ingredients)
+    print("tools:", s.tools)
+    print(" ")
     return
 
 
@@ -353,8 +366,10 @@ def printRecipe(steps, ingredients):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    #url = None
+    url = "https://www.allrecipes.com/recipe/228285/teriyaki-salmon/"
     # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
+
+
 
     # veg 
     # url = "https://www.allrecipes.com/recipe/244716/shirataki-meatless-meat-pad-thai/"
@@ -368,27 +383,32 @@ def main():
     # url = input("Please paste the url of the recipe you want to use:")
 
 
-    #rawData = fetch_recipe(url)
-    #recipe = parse_data(rawData)
-    #printRecipe(recipe["steps"],recipe["ingredients"])
+    rawData = fetch_recipe(url)
+    ingredients, steps = parse_data(rawData)
+    printRecipe(steps,ingredients)
 
 
-    # get transformation from user
+    # --to print out data representation/properties for steps and ingredients--
+
+    for i in ingredients:
+       printIngredient(i)
+
+    #for s in steps:
+    #    printStep(s)
+
+
+    #get transformation from user
     # t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
-    # transform(recipe["steps"],recipe["ingredients"], t)
+
 
     transformObj = Transform()
-    #ingredients, steps = transformObj.nonvegetarian(recipe["steps"],recipe["ingredients"])
-    #printRecipe(steps, ingredients)
-    # transformObj.vegetarian(recipe["steps"],recipe["ingredients"])
+    # ingredientsNV, stepsNV = transformObj.nonvegetarian(steps,ingredients)
+    # printRecipe(stepsNV, ingredientsNV)
+    # transformObj.vegetarian(steps,ingredients)
 
-    # #Heat 2 tablespoons of the oil in a large skillet over medium high heat.
-    i = Ingredient("4 tablespoons canadian bacon, divided", "canadian bacon", 4.0, "tablespoons", ['divided'])
-    s = Step("Heat 2 tablespoons of the canadian bacon in a large skillet over medium high heat.", 2, "heat", 0, ['canadian bacon'], ['skillet'])
-    
-    printRecipe([s], [i])
-    transformObj.unhealthy([s], [i])
-    printRecipe([s], [i])
+    #printRecipe(steps, ingredients)
+    transformObj.unhealthy(steps, ingredients)
+    printRecipe(steps, ingredients)
 
 
 if __name__ == '__main__':
