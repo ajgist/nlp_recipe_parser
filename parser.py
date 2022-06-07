@@ -315,7 +315,7 @@ def transform(steps, ingredients, transformation, obj):
     elif transformation == "asian":
         return obj.asianfood(steps, ingredients)
     elif transformation == "double":
-        return obj.doubleRecipe(steps, ingredients) 
+        return obj.doubleRecipe(steps, ingredients, Timelist) 
     else:
         print("Your request didn't match one of the available options :(")
         return None
@@ -364,7 +364,8 @@ def main():
     print("Welcome to the Interactive Recipe Parser!")
     # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
 
-    # EXTRA RECIPE: https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/
+    # EXTRA RECIPE: 
+    # url = "https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/"
 
 
 
@@ -397,7 +398,6 @@ def main():
 
     # get transformation from user
     t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
-
 
     transformObj = Transform()
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
