@@ -385,14 +385,22 @@ class Transform():
 
 
      def changeIngredients(self, steps, ingredients, Timelist, ratio):
+          def remove_time(obj):
+               text = obj.text
+               time = obj.time
+               if time != None:
+                    text = text.replace(time, '')
+               return text
           for obj in steps:
-               token = nltk.word_tokenize(obj.text)
+               text = remove_time(obj) 
+               token = nltk.word_tokenize(text)
                s = nltk.pos_tag(token)
                if (bool(set(obj.ingredients) & set(reduceIngredients))):
                     for i in range(len(s)):
                          if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
                               token[i] = str(ratio * int(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token)
+               textNew = TreebankWordDetokenizer().detokenize(token)
+               obj.text = obj.text.replace(text, " "+ textNew+" ")
     
           for obj in ingredients:
                token = nltk.word_tokenize(obj.text)
