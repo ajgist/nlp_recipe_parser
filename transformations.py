@@ -363,9 +363,11 @@ class Transform():
           for obj in steps:
                token = nltk.word_tokenize(obj.text)
                s = nltk.pos_tag(token)
-               for i in range(len(s)):
-                    if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                         token[i] = str(2 * int(token[i]))
+               method = obj.method # avoid changing the temperature in preheating stage
+               if method.lower() != "preheat":
+                    for i in range(len(s)):
+                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                              token[i] = str(2 * int(token[i]))
                obj.text = TreebankWordDetokenizer().detokenize(token)
     
           for obj in ingredients:
