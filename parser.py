@@ -364,6 +364,7 @@ def main():
     print("Welcome to the Interactive Recipe Parser!")
     # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
 
+
     # EXTRA RECIPE: 
     # url = "https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/"
 
@@ -377,8 +378,14 @@ def main():
     # healthy
     # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
+    #  unhealthy:
+    #  https://www.allrecipes.com/recipe/228285/teriyaki-salmon/
+
+    #GLUTENFREE RECIPE::
+    # https://www.allrecipes.com/recipe/6814/valentinos-pizza-crust/
+
     # takes user input from command line
-    url = input("Please paste the url of the recipe you want to use:")
+    url = input("Please paste the url of the recipe you want to use: ")
 
 
     rawData = fetch_recipe(url)
@@ -397,7 +404,7 @@ def main():
 
 
     # get transformation from user
-    t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
+    t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )\n")
 
     transformObj = Transform()
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)

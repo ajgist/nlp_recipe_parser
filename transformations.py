@@ -13,10 +13,10 @@ from structure import Step, Ingredient
 
 
 replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
-reduceIngredients = ["butter", "vegetable oil", "salt"]
+reduceIngredients = ["butter", "vegetable oil", "salt", "olive oil", "oil", "sugar"]
 
 unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
-gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles" }
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles", "all-purpose flour": "brown rice flour" }
 
 healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
@@ -304,6 +304,8 @@ class Transform():
                          s.ingredients[i] = replacementIngredients[si]
                          s.text = s.text.replace(si, replacementIngredients[si])
 
+          self.changeIngredients(steps, ingredients, [], 0.5)
+
           return (ingredients, steps)
 
      def unhealthy(self, steps, ingredients):
@@ -329,6 +331,8 @@ class Transform():
 
         
                #doubling bad common ingredients? - TO DO
+
+          self.changeIngredients(steps, ingredients, [], 2)
 
           return (ingredients, steps)
 
@@ -378,10 +382,26 @@ class Transform():
                          token[i] = str(2 * int(token[i]))
                obj.text = TreebankWordDetokenizer().detokenize(token) 
           return (ingredients, steps)
+
+
+     def changeIngredients(self, steps, ingredients, Timelist, ratio):
+          for obj in steps:
+               token = nltk.word_tokenize(obj.text)
+               s = nltk.pos_tag(token)
+               if (bool(set(obj.ingredients) & set(reduceIngredients))):
+                    for i in range(len(s)):
+                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                              token[i] = str(ratio * int(token[i]))
+               obj.text = TreebankWordDetokenizer().detokenize(token)
+    
+          for obj in ingredients:
+               token = nltk.word_tokenize(obj.text)
+               s = nltk.pos_tag(token)
+               if obj.name in reduceIngredients:
+                    print("Changing Recipe Amount for", obj.name, "...")
+                    for i in range(len(s)):
+                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                              token[i] = str(ratio * int(token[i]))
+               obj.text = TreebankWordDetokenizer().detokenize(token) 
+          return (ingredients, steps)
                     
-
-
-
-
-
-
