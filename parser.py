@@ -315,7 +315,7 @@ def transform(steps, ingredients, transformation, obj):
     elif transformation == "asian":
         return obj.asianfood(steps, ingredients)
     elif transformation == "double":
-        return obj.doubleRecipe(steps, ingredients) 
+        return obj.doubleRecipe(steps, ingredients, Timelist) 
     else:
         print("Your request didn't match one of the available options :(")
         return None

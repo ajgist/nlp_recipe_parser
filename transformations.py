@@ -1,16 +1,11 @@
-import json
-from bs4 import BeautifulSoup
-import requests
 import re
 import string
 
 from jinja2 import Environment, FileSystemLoader
 
 import nltk
-from nltk.tokenize import TweetTokenizer
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords as sw
-from nltk import word_tokenize, pos_tag
+from nltk.tokenize.treebank import TreebankWordDetokenizer
+
 import nltk.data
 nltk.download('omw-1.4')
 
@@ -32,6 +27,14 @@ def substitute(obj, substitution, property):
           newText = obj.text.replace(replaceWord, substitution)
           obj.text = newText
           return
+
+def checkTheIndexofNumtoChange(sentence, i, Timelist):
+    s = nltk.word_tokenize(sentence)
+    for j in range(i, i + 6):
+        if j >= len(s):  break
+        if sentence[j] in Timelist:
+            return False
+    return True
 
 class Transform():
      def reconstruct(self, texts):
@@ -301,7 +304,7 @@ class Transform():
                          s.ingredients[i] = replacementIngredients[si]
                          s.text = s.text.replace(si, replacementIngredients[si])
 
-          return
+          return (ingredients, steps)
 
      def unhealthy(self, steps, ingredients):
           print("making recipe unhealthy...")
@@ -327,7 +330,7 @@ class Transform():
         
                #doubling bad common ingredients? - TO DO
 
-          return
+          return (ingredients, steps)
 
      def glutenfree(self, steps, ingredients):
           print("making recipe gluten free...")
@@ -350,15 +353,30 @@ class Transform():
                          s.ingredients[i] = gfReplacementIngredients[si]
                          s.text = s.text.replace(si, gfReplacementIngredients[si])
 
-          return
+          return (ingredients, steps)
 
      def asianfood(self, steps, ingredients): #some type of cuisine
 
           return
 
-     def doubleRecipe(self, steps, ingredients):
-
-          return
+     def doubleRecipe(self, steps, ingredients, Timelist):
+          for obj in steps:
+               token = nltk.word_tokenize(obj.text)
+               s = nltk.pos_tag(token)
+               for i in range(len(s)):
+                    if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                         token[i] = str(2 * int(token[i]))
+               obj.text = TreebankWordDetokenizer().detokenize(token)
+    
+          for obj in ingredients:
+               token = nltk.word_tokenize(obj.text)
+               s = nltk.pos_tag(token)
+               for i in range(len(s)):
+                    if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                         token[i] = str(2 * int(token[i]))
+               obj.text = TreebankWordDetokenizer().detokenize(token) 
+          return (ingredients, steps)
+                    
 
 
 
