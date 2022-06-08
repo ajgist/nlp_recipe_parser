@@ -277,8 +277,8 @@ class Transform():
           #ingredients part
           newIngredients = []
           meats = ["ground beef", "ground chicken", "ground pork", "chicken", "beef", "pork", "pepperoni"]
-          flag = 0
           for ingredient in ingredients:
+               flag = 0
                if "broth" in ingredient.text:
                     ingredient.text = re.sub("(\w+) (broth)", "vegetable broth", ingredient.text)
                     newIngredients.append(ingredient)
@@ -289,7 +289,10 @@ class Transform():
                          print(f"Replacing {nonveg} to {transformation} in ingredients.")
                          ingredient.text = ingredient.text.replace(nonveg, transformation)
                          newIngredients.append(ingredient)
-                         continue
+                         flag = 1
+                         break
+
+               if flag: continue
 
                if any(meat in ingredient.text for meat in meats):
                     print("Replacing meat with tofu in ingredients..")
