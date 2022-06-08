@@ -64,6 +64,7 @@ def fetch_recipe(link):
     soup = BeautifulSoup(html, 'html.parser')
 
 #grab raw html elements for relevant sections
+    titleRaw = soup.find_all("h1", {"class": "headline heading-content elementFont__display"})
     ingredientsRaw = soup.find_all("span", {"class": "ingredients-item-name"})
     timingAndServingsRaw = soup.find_all("div", {"class": "recipe-meta-item-body elementFont__subtitle"}) #WIP - total time and # servings that recipe makes
     stepsRaw = [a for a in (td.find_all('p') for td in soup.findAll("ul", {"class": "instructions-section"})) if a]
@@ -81,7 +82,11 @@ def fetch_recipe(link):
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
 
-    data = {"ingredients": ingredients, "steps": steps}
+    title = None 
+    for x in titleRaw:
+        title = x.contents[0]
+
+    data = {"title": title, "ingredients": ingredients, "steps": steps}
     return data
     
 
@@ -390,6 +395,8 @@ def main():
 
     rawData = fetch_recipe(url)
 
+    print(rawData["title"])
+
     ingredients, steps = parse_data(rawData)
     printRecipe(steps,ingredients)
 
@@ -406,7 +413,7 @@ def main():
     # get transformation from user
     t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )\n")
 
-    transformObj = Transform()
+    transformObj = Transform(title = rawData["title"])
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
     printRecipe(stepsT, ingredientsT)
 

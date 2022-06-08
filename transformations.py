@@ -39,6 +39,8 @@ def checkTheIndexofNumtoChange(sentence, i, Timelist):
     return True
 
 class Transform():
+     def __init__(self, title=None):
+          self.title = title
      def reconstruct(self, texts):
           """
           input: Dictionary of step instructions
@@ -71,6 +73,7 @@ class Transform():
           """ 
           ideas:
           - find any pre-existing methods in the steps :-
+                    - case -1: pizza
                     - CASE 0: TOFU
                     - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
                     - CASE 2:check if preheat and grill; we will add grilled chicken to the recipe.
@@ -88,6 +91,17 @@ class Transform():
           j = 0
           number = 0
           L = len(steps)
+
+          #case -1
+          if "pizza" in self.title.lower():
+               print("Adding some pepperoni to ingredients..")
+               newIngredients = ingredients + [Ingredient(text="8 slices of pepperoni")]
+               for step in steps:
+                    if "top with" in step.text.lower():
+                         print("Topping with pepperoni..")
+                         step.text = step.text.lower().replace("top with", "top with pepperoni,").capitalize()
+                         break
+               return ( newIngredients, steps )
 
           #case 0
           #ingredients part; search for tofu
@@ -114,7 +128,7 @@ class Transform():
                     newSteps.append(step)
          
                
-               return ( newSteps, newIngredients )
+               return (newIngredients, newSteps )
 
           # other cases
           while number < L:
