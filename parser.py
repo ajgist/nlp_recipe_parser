@@ -114,7 +114,7 @@ def parse_data(data):
         iArr = word_tokenize(ingredient)
         quantity, units = IngredientHelperObj.find_number_and_units(iArr, measurements)
         name = IngredientHelperObj.find_name(iArr, measurements, ingredient_stopwords)
-        descriptors = [IngredientHelperObj.find_descriptors(iArr)]
+        descriptors = [IngredientHelperObj. find_descriptors(iArr)]
 
         # print(iArr)
         # print(quantity, units)

@@ -193,7 +193,12 @@ class IngredientHelper():
                          float(word)
                          isFloat = True
                     except ValueError:
-                         isFloat = False
+                         nums = re.search("(\d+)/(\d+)", word)
+                         if nums != None: 
+                              word = str(int(nums[1])/int(nums[2]))
+                              isFloat = True
+                         else:
+                              isFloat = False
 
                     if word.isnumeric() or isFloat: numArr.insert(0, word)
                     else: 
