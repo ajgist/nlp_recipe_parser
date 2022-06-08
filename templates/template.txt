@@ -1,0 +1,46 @@
+
+               <html>
+                    <style>
+                    table, th, td {
+                    border: 1px solid white;
+                    border-radius: 4px;
+                    border-collapse: collapse
+                    }
+                    th, td {
+                    background-color: #96D4D4;
+                    padding: 7px
+                    }
+                    </style>
+                    <body>
+
+                    <h2>Ingredient Comparison</h2>
+
+                    <table style="width:100%">
+                    <tr>
+                    <th>Before Transformation</th>
+                    <th>After Transformation</th>
+                    </tr>
+                    <tr>
+                    <td>{{ingredientsBefore}}</td>
+                    <td>{{ingredientsAfter}}</td>
+                    </tr>
+                    </table>
+
+                    <h2>Instructions Comparison</h2>
+
+                    <table style="width:100%">
+                    <tr>
+                    <th>Before Transformation</th>
+                    <th>After Transformation</th>
+                    </tr>
+                    <tr>
+                    <td>{{stepsBefore}}</td>
+                    <td>{{stepsAfter}}</td>
+                    </tr>
+                    </table>
+
+                    </body>
+                    </html>
+
+
+               

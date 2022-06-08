@@ -10,6 +10,8 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+import copy
+import sys
 
 from structure import Step, Ingredient
 
@@ -17,7 +19,7 @@ from structure import Step, Ingredient
 from helpers import StepHelper
 from transformations import Transform
 from structure import Step, Ingredient
-
+from convert_to_html import template
 
 #for nltk import errors
 import ssl
@@ -296,7 +298,6 @@ def parse_data(data):
             sObject = Step(text=text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
-            # print("Text:",text, "\n Method:", methodInStep, "\n Time:", time, "\n Ingredients:", ingredientsInStep, "\nTool:",tools)
 
     return iList, sList
 
@@ -398,6 +399,7 @@ def main():
     print(rawData["title"])
 
     ingredients, steps = parse_data(rawData)
+    ingredientsOld, stepsOld = [ingredient.text for ingredient in ingredients], [step.text for step in steps]
     printRecipe(steps,ingredients)
 
 
@@ -416,6 +418,9 @@ def main():
     transformObj = Transform(title = rawData["title"])
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
     printRecipe(stepsT, ingredientsT)
+
+    ingredientsNew, stepsNew = [ingredient.text for ingredient in ingredientsT], [step.text for step in stepsT]
+    template(stepsOld, ingredientsOld, stepsNew, ingredientsNew, t)
 
 
 if __name__ == '__main__':
