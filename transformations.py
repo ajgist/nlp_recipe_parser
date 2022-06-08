@@ -1,8 +1,6 @@
 import re
 import string
 
-from jinja2 import Environment, FileSystemLoader
-
 import nltk
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 
@@ -10,18 +8,23 @@ import nltk.data
 nltk.download('omw-1.4')
 
 from structure import Step, Ingredient
+from helpers import IngredientHelper
 
 from nltk import word_tokenize
 
 replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
-reduceIngredients = ["butter", "vegetable oil", "salt"]
+reduceIngredients = ["butter", "vegetable oil", "salt", "olive oil", "oil", "sugar"]
 
 unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
-gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles" }
+gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles", "all-purpose flour": "brown rice flour" }
 
 healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
+
 transformation_words_asian = {'long grain white rice': 'Koshihikari rice', 'jalapeno': 'kimchi', 'vegetable oil': 'sesame oil', 'chili sauce': 'red pepper', 'bacon': 'grilled pork', 'sour cream': 'soy sauce', 'black bean': 'red bean'}
+
+otherVegTransformations = {"sausage flavor": "basil flavor", "pork flavor": "basil flavor", "chicken flavor": "basil flavor", "beef flavor": "basil flavor"}
+
 
 
 def substitute(obj, substitution, property):
@@ -39,7 +42,23 @@ def checkTheIndexofNumtoChange(sentence, i, Timelist):
             return False
     return True
 
+def handleFraction(token):
+     # deal with symbols like ¾ 
+     if len(token) == 1:
+          if ord(token) == 188: return 0.25
+          if ord(token) == 189: return 0.5
+          if ord(token) == 190: return 0.75
+
+def remove_time(obj):
+               text = obj.text
+               time = obj.time
+               if time != None:
+                    text = text.replace(time, '')
+               return text
+
 class Transform():
+     def __init__(self, title=None):
+          self.title = title
      def reconstruct(self, texts):
           """
           input: Dictionary of step instructions
@@ -72,6 +91,7 @@ class Transform():
           """ 
           ideas:
           - find any pre-existing methods in the steps :-
+                    - case -1: pizza
                     - CASE 0: TOFU
                     - CASE 1:if roast/bake( or find the tool: oven ) found then baked chicken recipe. 
                     - CASE 2:check if preheat and grill; we will add grilled chicken to the recipe.
@@ -90,6 +110,17 @@ class Transform():
           number = 0
           L = len(steps)
 
+          #case -1
+          if "pizza" in self.title.lower():
+               print("Adding some pepperoni to ingredients..")
+               newIngredients = ingredients + [Ingredient(text="8 slices of pepperoni")]
+               for step in steps:
+                    if "top with" in step.text.lower():
+                         print("Topping with pepperoni..")
+                         step.text = step.text.lower().replace("top with", "top with pepperoni,").capitalize()
+                         break
+               return ( newIngredients, steps )
+
           #case 0
           #ingredients part; search for tofu
           newIngredients = []
@@ -97,6 +128,7 @@ class Transform():
           for ingredient in ingredients:
                if "tofu" in ingredient.text:
                     if flag == 0:
+                         print("Removing tofu in ingredients and adding ground beef")
                          newIngredients.append(Ingredient(text="1 and 1/2 pounds ground beef"))
                          flag = 1
                     else: continue
@@ -107,12 +139,14 @@ class Transform():
           #steps part if tofu present
           if flag == 1:
                newSteps = []
+               print("Substituting tofu with beef.")
                for step in steps:
                     text = re.sub('tofu', "beef", step.text)
-                    newSteps.append(Step(text=text))
+                    step.text = text
+                    newSteps.append(step)
          
                
-               return ( newSteps, newIngredients )
+               return (newIngredients, newSteps )
 
           # other cases
           while number < L:
@@ -122,7 +156,8 @@ class Transform():
                toolInStep[j] = step.tools
 
                #case 1
-               if flag == 0 and step.method == "preheat" and "oven" in step.tools:
+               if flag == 0 and step.method.lower() == "preheat" and "oven" in step.tools:
+                    print("Adding baked chicken instructions.")
                     # add chicken breast in ingredients
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
 
@@ -148,8 +183,9 @@ class Transform():
                     flag = 1
 
                # case 2
-               if flag == 0 and step.method == "preheat" and "grill" in step.tools:
+               if flag == 0 and step.method.lower() == "preheat" and "grill" in step.tools:
                     # add more ingredients
+                    print("Adding grilled chicken instructions.")
                     ingredients.append(Ingredient(text="4 (8 ounce) boneless, skinless chicken breasts"))
 
 
@@ -212,6 +248,7 @@ class Transform():
                     if stirIndex is not None:
                          allMethods = [methodInStep[key] for key in methodInStep.keys()]
                          if "cook" in allMethods and "heat" in allMethods:
+                              print("Adding instructions for cooking beef.")
                               ingredients.append(Ingredient(text="1 pound ground beef"))
                               j += 1
                               suggestedInstruction = "Add grounded beef and cook, stirring and crumbling into small pieces until browned, 5 to 7 minutes."
@@ -237,20 +274,45 @@ class Transform():
           - find any pre-existing methods in the steps :-
                     - Remove any meat steps
                     - add tofu steps
+                    - bacon -> eggplant
+                    - any meat broth -> veg broth
                     
                     
           """
           #ingredients part
           newIngredients = []
-          meats = ["chicken", "beef", "pork", "ground beef", "ground chicken", "ground pork"]
-          flag = 0
+          meats = ["ground beef", "ground chicken", "ground pork", "chicken", "beef", "pork", "pepperoni"]
           for ingredient in ingredients:
-               if any(meat in ingredient.text for meat in meats):
-                    if flag == 0:
-                         newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
-                    else: continue
-               else:
+               flag = 0
+               if "broth" in ingredient.text:
+                    ingredient.text = re.sub("(\w+) (broth)", "vegetable broth", ingredient.text)
                     newIngredients.append(ingredient)
+                    continue
+
+               for nonveg, transformation in otherVegTransformations.items(): 
+                    if nonveg in ingredient.text: 
+                         print(f"Replacing {nonveg} to {transformation} in ingredients.")
+                         ingredient.text = ingredient.text.replace(nonveg, transformation)
+                         newIngredients.append(ingredient)
+                         flag = 1
+                         break
+
+               if flag: continue
+
+               if any(meat in ingredient.text for meat in meats):
+                    print("Replacing meat with tofu in ingredients..")
+                    newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
+                    continue
+                    
+               if "bacon" in ingredient.text:
+                    print("Replacing bacon with eggplant in ingredients..")
+                    newIngredients.append(Ingredient(text="1 large eggplant, peeled and thinly sliced"))
+                    continue
+
+               
+
+               newIngredients.append(ingredient)
+              
 
 
           #steps part
@@ -258,23 +320,17 @@ class Transform():
           meat_descriptors = ["wings", "breast", "ground"] # remove these from step texts
           newSteps = []
           for step in steps:
-               text = re.sub('(wings|breast|ground)', '', step.text)
-               text = re.sub('(chicken|beef|pork)', "tofu", text)
-               newSteps.append(text)
-          
+               text = step.text.lower()
+               if step.method.lower() == "bake":
+                    print("Adjusting time for baking..")
+                    text = re.sub("for (\d+) (minute(s?)|hour(s?)|second(s?)|minutes|)", "for 1 hour", text) 
+               text = re.sub('(wings|breast|ground)', '', text)
+               text = re.sub("(\w+) (broth)", "vegetable broth", text)
+               text = text.replace("bacon", "eggplant")
+               step.text = re.sub('(chicken|beef|pork|pepperoni|meat)', "tofu", text).capitalize()
+               newSteps.append(step)
 
-          print("Printing Ingredients...")
-          for number, ingredient in enumerate(newIngredients):
-               print( number , ":", ingredient.text)
-
-          print("--------------------------------------------------------------------------------")
-
-          print("Printing Instructions...")
-          newSteps = self.reconstruct(newSteps)
-          for number, step in newSteps.items():
-               print( f"Step {number}: ", step)
-
-          print("--------------------------------------------------------------------------------")
+          return ( newIngredients, newSteps )
 
 #----------------------------------------------------------------END------------------------------------------#
 
@@ -307,6 +363,8 @@ class Transform():
                          s.ingredients[i] = replacementIngredients[si]
                          s.text = s.text.replace(si, replacementIngredients[si])
 
+          self.changeIngredients(steps, ingredients, [], 0.5)
+
           return (ingredients, steps)
 
      def unhealthy(self, steps, ingredients):
@@ -332,6 +390,8 @@ class Transform():
 
         
                #doubling bad common ingredients? - TO DO
+
+          self.changeIngredients(steps, ingredients, [], 2)
 
           return (ingredients, steps)
 
@@ -400,29 +460,70 @@ class Transform():
                          s.text = s.text.replace(si, transformation_words_asian[si])
           return (ingredients, steps)
 
-     def doubleRecipe(self, steps, ingredients, Timelist):
+     def doubleRecipe(self, steps, ingredients, Timelist):          
           for obj in steps:
-               token = nltk.word_tokenize(obj.text)
-               s = nltk.pos_tag(token)
+               text = remove_time(obj)
+               iobj = IngredientHelper({})
+               token = nltk.word_tokenize(text)
                method = obj.method # avoid changing the temperature in preheating stage
-               if method.lower() != "preheat":
-                    for i in range(len(s)):
-                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                              token[i] = str(2 * int(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token)
+               if method != "preheat" and method != 'Preheat':
+                    _ = iobj.find_number_and_units(token, [])
+                    wordMap = iobj.wordReplacement
+                    for word, replacement in wordMap.items():
+                         try: float(replacement)
+                         except: replacement = handleFraction(replacement)
+                         replacement = float(replacement)*2
+                         if int(replacement) == replacement: replacement = int(replacement)
+                         textNew = text.replace(word, str(replacement))
+                         obj.text = obj.text.replace(text, " "+textNew+" ")
+               
     
           for obj in ingredients:
-               token = nltk.word_tokenize(obj.text)
+               inner = re.search("(\((.)*\))", obj.text)
+               text = re.sub("(\((.)*\))", "[MASK]", obj.text)
+               iobj = IngredientHelper({})
+               token = nltk.word_tokenize(text)
+               _ = iobj.find_number_and_units(token, [])
+               wordMap = iobj.wordReplacement
+               for word, replacement in wordMap.items():
+                    try: float(replacement)
+                    except: replacement = handleFraction(replacement)
+                    replacement = float(replacement)*2
+                    if int(replacement) == replacement: replacement = int(replacement)
+                    if inner != None:
+                         text = text.replace("[MASK]", inner[0])
+                    obj.text = text.replace(word, str(replacement))
+
+          return (ingredients, steps)
+
+
+     def changeIngredients(self, steps, ingredients, Timelist, ratio):
+          for obj in steps:
+               text = remove_time(obj) 
+               token = nltk.word_tokenize(text)
                s = nltk.pos_tag(token)
-               for i in range(len(s)):
-                    if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                         token[i] = str(2 * int(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token) 
+               if (bool(set(obj.ingredients) & set(reduceIngredients))):
+                    for i in range(len(s)):
+                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
+                              token[i] = str(ratio * int(token[i]))
+               textNew = TreebankWordDetokenizer().detokenize(token)
+               obj.text = obj.text.replace(text, " "+ textNew+" ")
+    
+          for obj in ingredients:
+               if any(ingredient in obj.text for ingredient in reduceIngredients):
+                    inner = re.search("(\((.)*\))", obj.text)
+                    text = re.sub("(\((.)*\))", "[MASK]", obj.text)
+                    iobj = IngredientHelper({})
+                    token = nltk.word_tokenize(text)
+                    _ = iobj.find_number_and_units(token, [])
+                    wordMap = iobj.wordReplacement
+                    for word, replacement in wordMap.items():
+                         try: float(replacement)
+                         except: replacement = handleFraction(replacement)
+                         replacement = float(replacement)*ratio
+                         if int(replacement) == replacement: replacement = int(replacement)
+                         if inner != None:
+                              text = text.replace("[MASK]", inner[0])
+                         obj.text = text.replace(word, str(replacement)) 
           return (ingredients, steps)
                     
-
-
-
-
-
-

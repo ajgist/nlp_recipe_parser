@@ -10,14 +10,16 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+import copy
+import sys
 
 from structure import Step, Ingredient
 
 
-from helpers import StepHelper
+from helpers import StepHelper, IngredientHelper
 from transformations import Transform
 from structure import Step, Ingredient
-
+from convert_to_html import template
 
 #for nltk import errors
 import ssl
@@ -64,6 +66,7 @@ def fetch_recipe(link):
     soup = BeautifulSoup(html, 'html.parser')
 
 #grab raw html elements for relevant sections
+    titleRaw = soup.find_all("h1", {"class": "headline heading-content elementFont__display"})
     ingredientsRaw = soup.find_all("span", {"class": "ingredients-item-name"})
     timingAndServingsRaw = soup.find_all("div", {"class": "recipe-meta-item-body elementFont__subtitle"}) #WIP - total time and # servings that recipe makes
     stepsRaw = [a for a in (td.find_all('p') for td in soup.findAll("ul", {"class": "instructions-section"})) if a]
@@ -81,7 +84,11 @@ def fetch_recipe(link):
         innerSteps = contents.split('.')[:-1]
         steps += innerSteps
 
-    data = {"ingredients": ingredients, "steps": steps}
+    title = None 
+    for x in titleRaw:
+        title = x.contents[0]
+
+    data = {"title": title, "ingredients": ingredients, "steps": steps}
     return data
     
 
@@ -91,131 +98,9 @@ def parse_data(data):
   
 # __________helper funcs_________________________________________________________
 
-    def find_name(iArr):
-        # iArr = tokenized array 
-        ingredient = ""
-        checker = False
-        in_parentheses = False
-        for i in range(0, len(iArr)):
-            if iArr[i] == ",":
-                if ingredient == "":
-                    ingredient = iArr[i-1]
-                break
-            elif iArr[i] == "(":
-                in_parentheses = True
-            elif iArr[i] == ")":
-                in_parentheses = False
-            elif not checker:
-                if not in_parentheses and (iArr[i] in measurements or iArr[i] in ingredient_stopwords):
-                    checker = True
-            elif checker:
-                ingredient = ingredient + iArr[i] + " "
-        if ingredient == "":
-            ingredient = iArr[len(iArr)-1]
-
-        #this takes away last space after name - important for substitutions later
-        else: ingredient = ingredient[0:len(ingredient)-1]
-                    
-        #print("ingredient name: " + ingredient)
-        return ingredient
-                
-    def find_descriptors(iArr):
-        # extract everything after the comma
-        descriptor = ""
-        checker = False
-        in_parentheses = False
-        for i in range(0, len(iArr)):
-            if iArr[i] == "(":
-                in_parentheses = True
-            elif iArr[i] == ")":
-                in_parentheses = False
-            if not checker and iArr[i] == "," and not in_parentheses:
-                checker = True
-            elif checker:
-                descriptor = descriptor + iArr[i] + " "
-        #print("descriptors: " + descriptor)
-        return descriptor
-       
-
-    #takes array of digit elements and fractions and returns sum
-    def arrayToNum(numArr):
-            sum = 0
-            for num in numArr:
-                if len(num)>1: 
-                    sum = sum+float(num)
-                    continue
-                try:
-                    charName = unicodedata.name(num)
-                except ValueError:
-                    continue
-                if charName.startswith('VULGAR FRACTION'):
-                    charNorm = unicodedata.normalize('NFKC', num)
-                    top, mid, bottom = charNorm.partition('⁄')
-                    decimal = float(top) / float(bottom)
-                    sum = sum + float(decimal)
-                else: 
-                    sum = sum + float(num)
-            return sum
-
-    #helper func that returns number and units of measurement for a given ingredient
-    def find_number_and_units(iArr):
-        index = -1 #default if no unit of measurement is found
-        unit = "" #default / if there is no unit (1 lemon, 2 onions, etc)
-        numArr = []
-        multiplier = 1
-        for m in measurements:
-            if m in iArr: 
-                index = iArr.index(m)
-                unit = m
-                break
-
-
-        #if measurement word isn't found, search for any numbers in order
-        if index == -1:
-            for word in iArr:
-                isFloat = False
-                try:
-                    float(word)
-                    isFloat = True
-                except ValueError:
-                    isFloat = False
-
-                if word.isnumeric() or isFloat: numArr.append(word)
-
-        #search for numbers directly left of measurement keyword
-        else:
-            stopIndex = -1
-            for i in range(index-1, -1, -1):
-                word = iArr[i]
-                isFloat = False
-                try:
-                    float(word)
-                    isFloat = True
-                except ValueError:
-                    isFloat = False
-
-                if word.isnumeric() or isFloat: numArr.insert(0, word)
-                else: 
-                    stopIndex = i
-                    break
+    IngredientHelperObj = IngredientHelper()
+    
         
-            #search for multipliers before the direct number of units (ex. 2 (7 ounce) cans)
-            if stopIndex != -1:
-                multArr = []
-                for i in range(stopIndex, -1, -1):
-                    word = iArr[i]
-                    isFloat = False
-                    try:
-                        float(word)
-                        isFloat = True
-                    except ValueError:
-                        isFloat = False
-                    if word.isnumeric() or isFloat: multArr.insert(0, word)
-                    multiplier = arrayToNum(multArr)
-        sum = arrayToNum(numArr)
-        sum = sum * multiplier
-        return sum, unit
-
 # ______________end of ingredient quantity/unit parsing__________________________________
     recipe = {}
     """"
@@ -227,9 +112,9 @@ def parse_data(data):
     for i in range(0, len(data["ingredients"])):
         ingredient = data["ingredients"][i] 
         iArr = word_tokenize(ingredient)
-        quantity, units = find_number_and_units(iArr)
-        name = find_name(iArr)
-        descriptors = [find_descriptors(iArr)]
+        quantity, units = IngredientHelperObj.find_number_and_units(iArr, measurements)
+        name = IngredientHelperObj.find_name(iArr, measurements, ingredient_stopwords)
+        descriptors = [IngredientHelperObj.find_descriptors(iArr)]
 
         # print(iArr)
         # print(quantity, units)
@@ -291,7 +176,6 @@ def parse_data(data):
             sObject = Step(text=text, number = j, method = methodInStep, time=time, ingredients=ingredientsInStep, tools = tools)
             j += 1
             sList.append(sObject)
-            # print("Text:",text, "\n Method:", methodInStep, "\n Time:", time, "\n Ingredients:", ingredientsInStep, "\nTool:",tools)
 
     return iList, sList
 
@@ -364,6 +248,7 @@ def main():
     print("Welcome to the Interactive Recipe Parser!")
     # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
 
+
     # EXTRA RECIPE: 
     # url = "https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/"
 
@@ -377,13 +262,22 @@ def main():
     # healthy
     # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
+    #  unhealthy:
+    #  https://www.allrecipes.com/recipe/228285/teriyaki-salmon/
+
+    #GLUTENFREE RECIPE::
+    # https://www.allrecipes.com/recipe/6814/valentinos-pizza-crust/
+
     # takes user input from command line
-    # url = input("")
-    url = 'https://www.allrecipes.com/recipe/73303/mexican-rice-iii/'
+
+    url = input("Please paste the url of the recipe you want to use: ")
 
     rawData = fetch_recipe(url)
 
+    print(rawData["title"])
+
     ingredients, steps = parse_data(rawData)
+    ingredientsOld, stepsOld = [ingredient.text for ingredient in ingredients], [step.text for step in steps]
     printRecipe(steps,ingredients)
 
 
@@ -397,12 +291,15 @@ def main():
 
 
     # get transformation from user
-    # t = input("asianfood")
-    t = "asian"
 
-    transformObj = Transform()
+    t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )\n")
+
+    transformObj = Transform(title = rawData["title"])
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
     printRecipe(stepsT, ingredientsT)
+
+    ingredientsNew, stepsNew = [ingredient.text for ingredient in ingredientsT], [step.text for step in stepsT]
+    template(stepsOld, ingredientsOld, stepsNew, ingredientsNew, t)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,6 @@
 class Step:
 
-  def __init__(self, text, number, method, time=0, ingredients=[], tools=[]):
+  def __init__(self, text=None, number=None, method=None, time=0, ingredients=[], tools=[]):
     self.number = number
     self.text = text
     self.method = method #cooking method
