@@ -1,8 +1,6 @@
 import re
 import string
 
-from jinja2 import Environment, FileSystemLoader
-
 import nltk
 from nltk.tokenize.treebank import TreebankWordDetokenizer
 
