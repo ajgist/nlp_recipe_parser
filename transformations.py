@@ -36,6 +36,14 @@ def checkTheIndexofNumtoChange(sentence, i, Timelist):
             return False
     return True
 
+def handleFraction(token):
+     # deal with word form of numbers
+     # deal with symbols like ¾ 
+     if ord(token) == 188: return 0.25
+     if ord(token) == 189: return 0.5
+     if ord(token) == 190: return 0.75
+
+
 class Transform():
      def __init__(self, title=None):
           self.title = title
@@ -136,7 +144,7 @@ class Transform():
                toolInStep[j] = step.tools
 
                #case 1
-               if flag == 0 and step.method == "preheat" and "oven" in step.tools:
+               if flag == 0 and step.method.lower() == "preheat" and "oven" in step.tools:
                     print("Adding baked chicken instructions.")
                     # add chicken breast in ingredients
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
@@ -163,7 +171,7 @@ class Transform():
                     flag = 1
 
                # case 2
-               if flag == 0 and step.method == "preheat" and "grill" in step.tools:
+               if flag == 0 and step.method.lower() == "preheat" and "grill" in step.tools:
                     # add more ingredients
                     print("Adding grilled chicken instructions.")
                     ingredients.append(Ingredient(text="4 (8 ounce) boneless, skinless chicken breasts"))
@@ -404,10 +412,13 @@ class Transform():
                token = nltk.word_tokenize(obj.text)
                s = nltk.pos_tag(token)
                method = obj.method # avoid changing the temperature in preheating stage
-               if method.lower() != "preheat":
+               if method != "preheat" and method != 'Preheat':
                     for i in range(len(s)):
                          if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                              token[i] = str(2 * int(token[i]))
+                              try:
+                                   token[i] = str(2 * int(token[i]))
+                              except:
+                                   token[i] = str(2 * handleFraction(token[i]))
                obj.text = TreebankWordDetokenizer().detokenize(token)
     
           for obj in ingredients:
@@ -415,7 +426,10 @@ class Transform():
                s = nltk.pos_tag(token)
                for i in range(len(s)):
                     if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                         token[i] = str(2 * int(token[i]))
+                         try:
+                              token[i] = str(2 * int(token[i]))
+                         except:
+                              token[i] = str(2 * handleFraction(token[i]))
                obj.text = TreebankWordDetokenizer().detokenize(token) 
           return (ingredients, steps)
 
