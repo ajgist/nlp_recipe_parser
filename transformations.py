@@ -12,19 +12,17 @@ from helpers import IngredientHelper
 
 from nltk import word_tokenize
 
-replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
-reduceIngredients = ["butter", "vegetable oil", "salt", "olive oil", "oil", "sugar"]
+replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar", "cubed beef chuck roast": "extra lean cubed beef chuck roast"}
+reduceIngredients = ["butter", "vegetable oil", "salt", "olive oil", "oil", "sugar", "reduced-fat butter"]
 
 unhealthyReplaceIngredients = inv_map = {val: key for key, val in replacementIngredients.items()} #reversed dict of above
 gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour", "soy sauce": "tamari", "teriyaki": "gluten-free teriyaki", "breadcrumbs": "gluten-free breadcrumbs", "pasta": "rice pasta", "noodles": "rice noodles", "all-purpose flour": "brown rice flour" }
 
-healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
-
-transformation_words_asian = {'long grain white rice': 'Koshihikari rice', 'jalapeno': 'kimchi', 'vegetable oil': 'sesame oil', 'chili sauce': 'red pepper', 'bacon': 'grilled pork', 'sour cream': 'soy sauce', 'black bean': 'red bean'}
+transformation_words_asian = {'long grain white rice': 'Koshihikari rice', 'jalapeno': 'kimchi', 'vegetable oil': 'sesame oil', 'chili sauce': 'red pepper', 'bacon': 'grilled pork', 'sour cream': 'soy sauce', 'black bean': 'red bean', "oil":"sesame oil", "chili powder": "szechuan","tomato sauce": "gochujang", "tomato paste": "gochujang",  "pepper": "chinese 5 spice", "allspice": "chinese 5 spice", "tortilla": "roti bread", "corn tortilla": "roti bread", "flour tortilla": "roti bread"}
 
 otherVegTransformations = {"sausage flavor": "basil flavor", "pork flavor": "basil flavor", "chicken flavor": "basil flavor", "beef flavor": "basil flavor"}
-
+healthyReplacementActions = {"fry": "grill", "broil": "bake", "deep fry": "air fry", "broil": "grill", "broiler": "grilling"}
 
 
 def substitute(obj, substitution, property):
@@ -338,23 +336,17 @@ class Transform():
      def healthy(self, steps, ingredients):
           print("making recipe healthy...")
           """ 
-          ideas:
-          - reduce amount of butter/oil by half??
-
+          actions:
+          - reduce amount of butter/oil/etc by half
           - replace unhealty with healthy using dictionary
-    
           """
 
           for i in ingredients:
-               #if i.name in reduceIngredients:
-               #    substitute(i, (i.quantity)/2, i.quantity)
                if i.name in replacementIngredients:
                     print("Replacing", i.name, "with", replacementIngredients[i.name], "!")
                     substitute(i, replacementIngredients[i.name], "name")
     
           for s in steps:
-               #reducing bad common ingredients - TO DO
-
 
                #substituting ingredients for healthier ones
                for i in range(0, len(s.ingredients)):
@@ -362,7 +354,8 @@ class Transform():
                     if si in replacementIngredients:
                          s.ingredients[i] = replacementIngredients[si]
                          s.text = s.text.replace(si, replacementIngredients[si])
-
+     
+          #reducing bad common ingredients
           self.changeIngredients(steps, ingredients, [], 0.5)
 
           return (ingredients, steps)
@@ -370,7 +363,7 @@ class Transform():
      def unhealthy(self, steps, ingredients):
           print("making recipe unhealthy...")
           """ 
-          ideas:
+          actions:
           - replace healty with unhealthy using dictionary
           """
 
@@ -381,16 +374,14 @@ class Transform():
 
     
           for s in steps:
-               #substituting ingredients for healthier ones
+               #substituting ingredients for unhealthier ones
                for i in range(0, len(s.ingredients)):
                     si = s.ingredients[i]
                     if si in unhealthyReplaceIngredients:
                          s.ingredients[i] = unhealthyReplaceIngredients[si]
                          s.text = s.text.replace(si, unhealthyReplaceIngredients[si])
-
-        
-               #doubling bad common ingredients? - TO DO
-
+     
+          #doubling bad common ingredients
           self.changeIngredients(steps, ingredients, [], 2)
 
           return (ingredients, steps)
@@ -398,7 +389,7 @@ class Transform():
      def glutenfree(self, steps, ingredients):
           print("making recipe gluten free...")
           """ 
-          ideas:
+          acitons:
           - replace gluten with gluten free using dictionary
           """
 
@@ -409,7 +400,6 @@ class Transform():
 
     
           for s in steps:
-               #substituting ingredients for healthier ones
                for i in range(0, len(s.ingredients)):
                     si = s.ingredients[i]
                     if si in gfReplacementIngredients:
@@ -418,31 +408,7 @@ class Transform():
 
           return (ingredients, steps)
 
-     def asianfood(self, steps, ingredients): #some type of cuisine
-          # def transform_mexican_to_asian(iArr):
-          #      mexican = [*transformation_words_asian]
-          #      # print('mexican', mexican)
-          #      for i in range(0, len(iArr)-1):
-          #           if iArr[i] in mexican:
-          #                # print('mexican ingredient: ' + iArr[i])
-          #                iArr[i] = transformation_words_asian[iArr[i]]
-          #      return iArr
-
-          # for i in range(0, len(ingredients)):
-          #      ingredient_text = ingredients[i].text
-          #      iArr = word_tokenize(ingredient_text)
-          #      transformed_to_asian = transform_mexican_to_asian(iArr)
-          #      ingredient_text = ' '.join(transformed_to_asian)
-          #      ingredients[i].text = ingredient_text
-
-          # for i in range(0, len(steps)):
-          #      step_text = steps[i].text
-          #      iArr = word_tokenize(step_text)
-          #      transformed_to_asian = transform_mexican_to_asian(iArr)
-          #      step_text = ' '.join(transformed_to_asian)
-          #      steps[i].text = step_text
-
-          # return (ingredients, steps)
+     def asianfood(self, steps, ingredients): 
           print("making recipe asian...")
 
           for i in ingredients:
@@ -452,7 +418,7 @@ class Transform():
 
     
           for s in steps:
-               #substituting ingredients for healthier ones
+               #substituting ingredients for asian ones
                for i in range(0, len(s.ingredients)):
                     si = s.ingredients[i]
                     if si in transformation_words_asian:
@@ -477,7 +443,6 @@ class Transform():
                          textNew = text.replace(word, str(replacement))
                          obj.text = obj.text.replace(text, " "+textNew+" ")
                
-    
           for obj in ingredients:
                inner = re.search("(\((.)*\))", obj.text)
                text = re.sub("(\((.)*\))", "[MASK]", obj.text)

@@ -68,7 +68,6 @@ def fetch_recipe(link):
 #grab raw html elements for relevant sections
     titleRaw = soup.find_all("h1", {"class": "headline heading-content elementFont__display"})
     ingredientsRaw = soup.find_all("span", {"class": "ingredients-item-name"})
-    timingAndServingsRaw = soup.find_all("div", {"class": "recipe-meta-item-body elementFont__subtitle"}) #WIP - total time and # servings that recipe makes
     stepsRaw = [a for a in (td.find_all('p') for td in soup.findAll("ul", {"class": "instructions-section"})) if a]
  
 
@@ -95,13 +94,7 @@ def fetch_recipe(link):
 
 
 def parse_data(data):
-  
-# __________helper funcs_________________________________________________________
-
     IngredientHelperObj = IngredientHelper()
-    
-        
-# ______________end of ingredient quantity/unit parsing__________________________________
     recipe = {}
     """"
     fit raw data to classes/objects
@@ -116,24 +109,17 @@ def parse_data(data):
         name = IngredientHelperObj.find_name(iArr, measurements, ingredient_stopwords)
         descriptors = [IngredientHelperObj.find_descriptors(iArr)]
 
-        # print(iArr)
-        # print(quantity, units)
-        # print("____________________________")
-
         iObject = Ingredient(text=data["ingredients"][i], name=name, quantity=quantity, unit=units, descriptors=descriptors)
         iList.append(iObject)
 
 
-        #iObject = Ingredient("name", quantity, units)
-        #iList.append(iObject)
-
     sList = []
 
     """
-    parse steps: ideas
+    parse steps: actions
     - use list of ingredients as keywords to find all ingredients in a step
     - include check for prepositions for extra details
-    - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient maybe? idk
+    - ** some words are ingredients/tools and verbs (microwave, salt) find way to distinguish the verb before the ingredient
     """
 
 
@@ -180,11 +166,6 @@ def parse_data(data):
     return iList, sList
 
 
-
-#helper func to substitute property and do a replace on the text (NOT good for step.ingredients since it is a list)
-
-
-
 def transform(steps, ingredients, transformation, obj):
     if transformation == "healthy":
         return obj.healthy(steps, ingredients)
@@ -216,8 +197,10 @@ def printRecipe(steps, ingredients):
     print("------------------------------------")
     print("-------------Directions-------------")
     print("------------------------------------")
+    print("Click any button to see the next step.")
     for i in range(0,len(steps)):
         print("Step", i+1, ":", steps[i].text)
+        input(" ")
     return
 
 def printIngredient(i):
@@ -246,12 +229,6 @@ def printStep(s):
 def main():
     # Your Code here
     print("Welcome to the Interactive Recipe Parser!")
-    # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
-
-
-    # EXTRA RECIPE: 
-    # url = "https://www.allrecipes.com/recipe/20809/avocado-soup-with-chicken-and-lime/"
-
 
 
     # veg 
@@ -260,16 +237,19 @@ def main():
     # url = "https://www.allrecipes.com/recipe/24074/alysias-basic-meat-lasagna/"
 
     # healthy
-    # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
-
+    # url = "https://www.allrecipes.com/recipe/16167/beef-bourguignon-i/"
     #  unhealthy:
     #  https://www.allrecipes.com/recipe/228285/teriyaki-salmon/
+
+    #asian: https://www.allrecipes.com/recipe/73303/mexican-rice-iii/
 
     #GLUTENFREE RECIPE::
     # https://www.allrecipes.com/recipe/6814/valentinos-pizza-crust/
 
-    # takes user input from command line
+    #doubling: https://www.allrecipes.com/recipe/7757/tiramisu-cheesecake/
 
+
+    # takes user input from command line
     url = input("Please paste the url of the recipe you want to use: ")
 
     rawData = fetch_recipe(url)
@@ -278,11 +258,8 @@ def main():
 
     ingredients, steps = parse_data(rawData)
     ingredientsOld, stepsOld = [ingredient.text for ingredient in ingredients], [step.text for step in steps]
-    printRecipe(steps,ingredients)
-
 
     # --to print out data representation/properties for steps and ingredients--
-
     for i in ingredients:
        printIngredient(i)
 
@@ -291,7 +268,6 @@ def main():
 
 
     # get transformation from user
-
     t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )\n")
 
     transformObj = Transform(title = rawData["title"])
