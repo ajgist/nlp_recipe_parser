@@ -106,7 +106,8 @@ class Transform():
                newSteps = []
                for step in steps:
                     text = re.sub('tofu', "beef", step.text)
-                    newSteps.append(Step(text=text))
+                    step.text = text
+                    newSteps.append(step)
          
                
                return ( newSteps, newIngredients )
@@ -256,22 +257,10 @@ class Transform():
           newSteps = []
           for step in steps:
                text = re.sub('(wings|breast|ground)', '', step.text)
-               text = re.sub('(chicken|beef|pork)', "tofu", text)
-               newSteps.append(text)
-          
+               step.text = re.sub('(chicken|beef|pork)', "tofu", text)
+               newSteps.append(step)
 
-          print("Printing Ingredients...")
-          for number, ingredient in enumerate(newIngredients):
-               print( number , ":", ingredient.text)
-
-          print("--------------------------------------------------------------------------------")
-
-          print("Printing Instructions...")
-          newSteps = self.reconstruct(newSteps)
-          for number, step in newSteps.items():
-               print( f"Step {number}: ", step)
-
-          print("--------------------------------------------------------------------------------")
+          return ( newIngredients, newSteps )
 
 #----------------------------------------------------------------END------------------------------------------#
 
