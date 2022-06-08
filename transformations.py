@@ -94,6 +94,7 @@ class Transform():
           for ingredient in ingredients:
                if "tofu" in ingredient.text:
                     if flag == 0:
+                         print("Removing tofu in ingredients and adding ground beef")
                          newIngredients.append(Ingredient(text="1 and 1/2 pounds ground beef"))
                          flag = 1
                     else: continue
@@ -104,6 +105,7 @@ class Transform():
           #steps part if tofu present
           if flag == 1:
                newSteps = []
+               print("Substituting tofu with beef.")
                for step in steps:
                     text = re.sub('tofu', "beef", step.text)
                     step.text = text
@@ -121,6 +123,7 @@ class Transform():
 
                #case 1
                if flag == 0 and step.method == "preheat" and "oven" in step.tools:
+                    print("Adding baked chicken instructions.")
                     # add chicken breast in ingredients
                     ingredients.append(Ingredient(text="1 (3 pound) whole chicken, giblets removed"))
 
@@ -148,6 +151,7 @@ class Transform():
                # case 2
                if flag == 0 and step.method == "preheat" and "grill" in step.tools:
                     # add more ingredients
+                    print("Adding grilled chicken instructions.")
                     ingredients.append(Ingredient(text="4 (8 ounce) boneless, skinless chicken breasts"))
 
 
@@ -210,6 +214,7 @@ class Transform():
                     if stirIndex is not None:
                          allMethods = [methodInStep[key] for key in methodInStep.keys()]
                          if "cook" in allMethods and "heat" in allMethods:
+                              print("Adding instructions for cooking beef.")
                               ingredients.append(Ingredient(text="1 pound ground beef"))
                               j += 1
                               suggestedInstruction = "Add grounded beef and cook, stirring and crumbling into small pieces until browned, 5 to 7 minutes."
@@ -241,11 +246,22 @@ class Transform():
           #ingredients part
           newIngredients = []
           meats = ["chicken", "beef", "pork", "ground beef", "ground chicken", "ground pork"]
+          flavours = ["sausage flavored", "sausage flavor", "sausage flavors", "pork flavored", "pork flavor", "sausage flavors", "chicken flavored", "chicken flavor", "chicken flavors", "beef flavored", "beef flavor", "beef flavors"]
           flag = 0
           for ingredient in ingredients:
                if any(meat in ingredient.text for meat in meats):
                     if flag == 0:
+                         print("Replacing meat with tofu in ingredients.")
                          newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
+                    else: continue
+               if any(flavour in ingredient.text for flavour in flavours):
+                    if flag == 0:
+                         f = None
+                         for flavour in flavours: 
+                              if flavour in ingredient.text: f = flavour
+                         print("Replacing meat flavoured sauce to vegetarian flavour in ingredients.")
+                         ingredient.text = ingredient.text.replace(f, "basil flavored")
+                         newIngredients.append(ingredient)
                     else: continue
                else:
                     newIngredients.append(ingredient)
