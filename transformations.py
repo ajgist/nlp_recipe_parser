@@ -19,7 +19,7 @@ gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour",
 
 healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
-otherVegTransformations = {"sausage flavored": "basil flavored", "sausage flavor": "basil flavor", "sausage flavors": "basil flavors", "pork flavored": "basil flavors", "pork flavor": "basil flavor", "sausage flavors": "basil flavors", "chicken flavored": "basil flavored", "chicken flavor": "basil flavor", "chicken flavors": "basil flavors", "beef flavored": "basil flavored", "beef flavor": "basil flavor", "beef flavors": "basil flavors"}
+otherVegTransformations = {"sausage flavor": "basil flavor", "pork flavor": "basil flavor", "chicken flavor": "basil flavor", "beef flavor": "basil flavor"}
 
 
 def substitute(obj, substitution, property):

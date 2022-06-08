@@ -89,5 +89,5 @@ def template(steps, ingredients, stepsNew, ingredientsNew, t):
      template = env.get_template("template.txt")
      output = template.render(stepsBefore = stepsBefore, stepsAfter = stepsAfter, ingredientsBefore = ingredientsBefore, ingredientsAfter = ingredientsAfter)
      
-     with open(f"{t}.html",'w') as f:
+     with open(f"{t}.html",'w', encoding='utf-8') as f:
           f.write(output)
