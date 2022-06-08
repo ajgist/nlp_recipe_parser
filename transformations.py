@@ -20,6 +20,8 @@ gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour",
 
 healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
+otherVegTransformations = {"sausage flavored": "basil flavored", "sausage flavor": "basil flavor", "sausage flavors": "basil flavors", "pork flavored": "basil flavors", "pork flavor": "basil flavor", "sausage flavors": "basil flavors", "chicken flavored": "basil flavored", "chicken flavor": "basil flavor", "chicken flavors": "basil flavors", "beef flavored": "basil flavored", "beef flavor": "basil flavor", "beef flavors": "basil flavors"}
+
 
 def substitute(obj, substitution, property):
           replaceWord = getattr(obj, property)
@@ -245,24 +247,22 @@ class Transform():
           """
           #ingredients part
           newIngredients = []
-          meats = ["chicken", "beef", "pork", "ground beef", "ground chicken", "ground pork"]
-          flavours = ["sausage flavored", "sausage flavor", "sausage flavors", "pork flavored", "pork flavor", "sausage flavors", "chicken flavored", "chicken flavor", "chicken flavors", "beef flavored", "beef flavor", "beef flavors"]
+          meats = ["ground beef", "ground chicken", "ground pork", "chicken", "beef", "pork", "pepperoni"]
           flag = 0
           for ingredient in ingredients:
+               for nonveg, transformation in otherVegTransformations.items(): 
+                    if nonveg in ingredient.text: 
+                         print(f"Replacing {nonveg} to {transformation} in ingredients.")
+                         ingredient.text = ingredient.text.replace(nonveg, transformation)
+
                if any(meat in ingredient.text for meat in meats):
                     if flag == 0:
                          print("Replacing meat with tofu in ingredients.")
                          newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
-                    else: continue
-               if any(flavour in ingredient.text for flavour in flavours):
-                    if flag == 0:
-                         f = None
-                         for flavour in flavours: 
-                              if flavour in ingredient.text: f = flavour
-                         print("Replacing meat flavoured sauce to vegetarian flavour in ingredients.")
-                         ingredient.text = ingredient.text.replace(f, "basil flavored")
-                         newIngredients.append(ingredient)
-                    else: continue
+                         flag = 1
+
+                    newIngredients.append(ingredient)
+                    
                else:
                     newIngredients.append(ingredient)
 
