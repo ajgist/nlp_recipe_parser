@@ -378,8 +378,8 @@ def main():
     # url = "https://www.allrecipes.com/recipe/245362/chef-johns-shakshuka/"
 
     # takes user input from command line
-    url = input("Please paste the url of the recipe you want to use:")
-
+    # url = input("")
+    url = 'https://www.allrecipes.com/recipe/73303/mexican-rice-iii/'
 
     rawData = fetch_recipe(url)
 
@@ -397,7 +397,8 @@ def main():
 
 
     # get transformation from user
-    t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )")
+    # t = input("asianfood")
+    t = "asian"
 
     transformObj = Transform()
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
