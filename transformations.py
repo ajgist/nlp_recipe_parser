@@ -490,9 +490,9 @@ class Transform():
                     except: replacement = handleFraction(replacement)
                     replacement = float(replacement)*2
                     if int(replacement) == replacement: replacement = int(replacement)
-                    if inner != None:
-                         text = text.replace("[MASK]", inner[0])
                     obj.text = text.replace(word, str(replacement))
+                    if inner != None:
+                         obj.text = obj.text.replace("[MASK]", inner[0])
 
           return (ingredients, steps)
 
@@ -522,8 +522,8 @@ class Transform():
                          except: replacement = handleFraction(replacement)
                          replacement = float(replacement)*ratio
                          if int(replacement) == replacement: replacement = int(replacement)
-                         if inner != None:
-                              text = text.replace("[MASK]", inner[0])
                          obj.text = text.replace(word, str(replacement)) 
+                         if inner != None:
+                              obj.text = obj.text.replace("[MASK]", inner[0])
           return (ingredients, steps)
                     
