@@ -254,6 +254,8 @@ class Transform():
           - find any pre-existing methods in the steps :-
                     - Remove any meat steps
                     - add tofu steps
+                    - bacon -> eggplant
+                    - any meat broth -> veg broth
                     
                     
           """
@@ -262,21 +264,32 @@ class Transform():
           meats = ["ground beef", "ground chicken", "ground pork", "chicken", "beef", "pork", "pepperoni"]
           flag = 0
           for ingredient in ingredients:
+               if "broth" in ingredient.text:
+                    ingredient.text = re.sub("(\w+) (broth)", "vegetable broth", ingredient.text)
+                    newIngredients.append(ingredient)
+                    continue
+
                for nonveg, transformation in otherVegTransformations.items(): 
                     if nonveg in ingredient.text: 
                          print(f"Replacing {nonveg} to {transformation} in ingredients.")
                          ingredient.text = ingredient.text.replace(nonveg, transformation)
+                         newIngredients.append(ingredient)
+                         continue
 
                if any(meat in ingredient.text for meat in meats):
-                    if flag == 0:
-                         print("Replacing meat with tofu in ingredients.")
-                         newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
-                         flag = 1
-
-                    newIngredients.append(ingredient)
+                    print("Replacing meat with tofu in ingredients..")
+                    newIngredients.append(Ingredient(text="1 (12 ounce) package tofu, cut into chunks"))
+                    continue
                     
-               else:
-                    newIngredients.append(ingredient)
+               if "bacon" in ingredient.text:
+                    print("Replacing bacon with eggplant in ingredients..")
+                    newIngredients.append(Ingredient(text="1 large eggplant, peeled and thinly sliced"))
+                    continue
+
+               
+
+               newIngredients.append(ingredient)
+              
 
 
           #steps part
@@ -284,8 +297,14 @@ class Transform():
           meat_descriptors = ["wings", "breast", "ground"] # remove these from step texts
           newSteps = []
           for step in steps:
-               text = re.sub('(wings|breast|ground)', '', step.text)
-               step.text = re.sub('(chicken|beef|pork)', "tofu", text)
+               text = step.text.lower()
+               if step.method.lower() == "bake":
+                    print("Adjusting time for baking..")
+                    text = re.sub("for (\d+) (minute(s?)|hour(s?)|second(s?)|minutes|)", "for 1 hour", text) 
+               text = re.sub('(wings|breast|ground)', '', text)
+               text = re.sub("(\w+) (broth)", "vegetable broth", text)
+               text = text.replace("bacon", "eggplant")
+               step.text = re.sub('(chicken|beef|pork|pepperoni|meat)', "tofu", text).capitalize()
                newSteps.append(step)
 
           return ( newIngredients, newSteps )

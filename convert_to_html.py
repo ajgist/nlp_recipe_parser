@@ -53,32 +53,32 @@ def template(steps, ingredients, stepsNew, ingredientsNew, t):
      file_loader = FileSystemLoader('templates')
      env = Environment(loader=file_loader)
 
-     htmlLines = ["<ul>"]
+     htmlLines = ["<ol>"]
      for step in steps:
-          textLine = step.text
+          textLine = step
           htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-     htmlLines.append("</ul>")
+     htmlLines.append("</ol>")
      stepsBefore = '\n'.join(htmlLines)
 
-     htmlLines = ["<ul>"]
+     htmlLines = ["<ol>"]
      for step in stepsNew:
-          textLine = step.text
+          textLine = step
           htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-     htmlLines.append("</ul>")
+     htmlLines.append("</ol>")
      stepsAfter = '\n'.join(htmlLines)
 
-     htmlLines = ["<ul>"]
+     htmlLines = ["<ol>"]
      for ingredient in ingredients:
-          textLine = ingredient.text
+          textLine = ingredient
           htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-     htmlLines.append("</ul>")
+     htmlLines.append("</ol>")
      ingredientsBefore = '\n'.join(htmlLines)
 
-     htmlLines = ["<ul>"]
+     htmlLines = ["<ol>"]
      for ingredient in ingredientsNew:
-          textLine = ingredient.text
+          textLine = ingredient
           htmlLines.append('<li>%s</li>' % textLine) # or something even nicer
-     htmlLines.append("</ul>")
+     htmlLines.append("</ol>")
      ingredientsAfter = '\n'.join(htmlLines)
 
      with open("templates/template.txt",'w') as f:

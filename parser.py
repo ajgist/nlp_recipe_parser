@@ -10,6 +10,8 @@ from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords as sw
 from nltk import word_tokenize, pos_tag
 import nltk.data
+import copy
+import sys
 
 from structure import Step, Ingredient
 
@@ -397,6 +399,7 @@ def main():
     print(rawData["title"])
 
     ingredients, steps = parse_data(rawData)
+    ingredientsOld, stepsOld = [ingredient.text for ingredient in ingredients], [step.text for step in steps]
     printRecipe(steps,ingredients)
 
 
@@ -416,7 +419,8 @@ def main():
     ingredientsT, stepsT = transform(steps=steps, ingredients=ingredients, transformation=t, obj=transformObj)
     printRecipe(stepsT, ingredientsT)
 
-    template(steps, ingredients, stepsT, ingredientsT, t)
+    ingredientsNew, stepsNew = [ingredient.text for ingredient in ingredientsT], [step.text for step in stepsT]
+    template(stepsOld, ingredientsOld, stepsNew, ingredientsNew, t)
 
 
 if __name__ == '__main__':
