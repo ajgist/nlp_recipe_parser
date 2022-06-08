@@ -464,13 +464,20 @@ class Transform():
                obj.text = obj.text.replace(text, " "+ textNew+" ")
     
           for obj in ingredients:
-               token = nltk.word_tokenize(obj.text)
-               s = nltk.pos_tag(token)
-               if obj.name in reduceIngredients:
-                    print("Changing Recipe Amount for", obj.name, "...")
-                    for i in range(len(s)):
-                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                              token[i] = str(ratio * int(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token) 
+               if any(ingredient in obj.text for ingredient in reduceIngredients):
+                    inner = re.search("(\((.)*\))", obj.text)
+                    text = re.sub("(\((.)*\))", "[MASK]", obj.text)
+                    iobj = IngredientHelper({})
+                    token = nltk.word_tokenize(text)
+                    _ = iobj.find_number_and_units(token, [])
+                    wordMap = iobj.wordReplacement
+                    for word, replacement in wordMap.items():
+                         try: float(replacement)
+                         except: replacement = handleFraction(replacement)
+                         replacement = float(replacement)*ratio
+                         if int(replacement) == replacement: replacement = int(replacement)
+                         if inner != None:
+                              text = text.replace("[MASK]", inner[0])
+                         obj.text = text.replace(word, str(replacement)) 
           return (ingredients, steps)
                     
