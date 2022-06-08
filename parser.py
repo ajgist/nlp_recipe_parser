@@ -269,8 +269,8 @@ def main():
     # https://www.allrecipes.com/recipe/6814/valentinos-pizza-crust/
 
     # takes user input from command line
-    url = input("Please paste the url of the recipe you want to use: ")
 
+    url = input("Please paste the url of the recipe you want to use: ")
 
     rawData = fetch_recipe(url)
 
@@ -291,6 +291,7 @@ def main():
 
 
     # get transformation from user
+
     t = input("Please enter a transformation ( healthy, unhealthy, vegatarian, nonvegetarian, glutenfree, asian, double )\n")
 
     transformObj = Transform(title = rawData["title"])

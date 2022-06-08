@@ -10,6 +10,7 @@ nltk.download('omw-1.4')
 from structure import Step, Ingredient
 from helpers import IngredientHelper
 
+from nltk import word_tokenize
 
 replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
 reduceIngredients = ["butter", "vegetable oil", "salt", "olive oil", "oil", "sugar"]
@@ -19,7 +20,11 @@ gfReplacementIngredients = {"bread": "gluten-free bread", "flour": "rice flour",
 
 healthyReplacementActions = {"fry": "grill", "broil": "bake"}
 
+
+transformation_words_asian = {'long grain white rice': 'Koshihikari rice', 'jalapeno': 'kimchi', 'vegetable oil': 'sesame oil', 'chili sauce': 'red pepper', 'bacon': 'grilled pork', 'sour cream': 'soy sauce', 'black bean': 'red bean'}
+
 otherVegTransformations = {"sausage flavor": "basil flavor", "pork flavor": "basil flavor", "chicken flavor": "basil flavor", "beef flavor": "basil flavor"}
+
 
 
 def substitute(obj, substitution, property):
@@ -414,8 +419,46 @@ class Transform():
           return (ingredients, steps)
 
      def asianfood(self, steps, ingredients): #some type of cuisine
+          # def transform_mexican_to_asian(iArr):
+          #      mexican = [*transformation_words_asian]
+          #      # print('mexican', mexican)
+          #      for i in range(0, len(iArr)-1):
+          #           if iArr[i] in mexican:
+          #                # print('mexican ingredient: ' + iArr[i])
+          #                iArr[i] = transformation_words_asian[iArr[i]]
+          #      return iArr
 
-          return
+          # for i in range(0, len(ingredients)):
+          #      ingredient_text = ingredients[i].text
+          #      iArr = word_tokenize(ingredient_text)
+          #      transformed_to_asian = transform_mexican_to_asian(iArr)
+          #      ingredient_text = ' '.join(transformed_to_asian)
+          #      ingredients[i].text = ingredient_text
+
+          # for i in range(0, len(steps)):
+          #      step_text = steps[i].text
+          #      iArr = word_tokenize(step_text)
+          #      transformed_to_asian = transform_mexican_to_asian(iArr)
+          #      step_text = ' '.join(transformed_to_asian)
+          #      steps[i].text = step_text
+
+          # return (ingredients, steps)
+          print("making recipe asian...")
+
+          for i in ingredients:
+               if i.name in transformation_words_asian:
+                    print("Replacing", i.name, "with", transformation_words_asian[i.name], "!")
+                    substitute(i, transformation_words_asian[i.name], "name")
+
+    
+          for s in steps:
+               #substituting ingredients for healthier ones
+               for i in range(0, len(s.ingredients)):
+                    si = s.ingredients[i]
+                    if si in transformation_words_asian:
+                         s.ingredients[i] = transformation_words_asian[si]
+                         s.text = s.text.replace(si, transformation_words_asian[si])
+          return (ingredients, steps)
 
      def doubleRecipe(self, steps, ingredients, Timelist):          
           for obj in steps:
