@@ -8,6 +8,7 @@ import nltk.data
 nltk.download('omw-1.4')
 
 from structure import Step, Ingredient
+from helpers import IngredientHelper
 
 
 replacementIngredients = { "oil" : "olive oil", "fry": "bake", "margarine": "butter", "bacon": "canadian bacon", "beef": "extra lean beef", "butter": "reduced fat butter", "milk": "skim milk", "cheese": "reduced fat cheese", "sour cream": "nonfat sour cream", "bread": "whole wheat bread", "white sugar": "brown sugar", "sugar": "brown sugar"}
@@ -37,12 +38,18 @@ def checkTheIndexofNumtoChange(sentence, i, Timelist):
     return True
 
 def handleFraction(token):
-     # deal with word form of numbers
      # deal with symbols like ¾ 
-     if ord(token) == 188: return 0.25
-     if ord(token) == 189: return 0.5
-     if ord(token) == 190: return 0.75
+     if len(token) == 1:
+          if ord(token) == 188: return 0.25
+          if ord(token) == 189: return 0.5
+          if ord(token) == 190: return 0.75
 
+def remove_time(obj):
+               text = obj.text
+               time = obj.time
+               if time != None:
+                    text = text.replace(time, '')
+               return text
 
 class Transform():
      def __init__(self, title=None):
@@ -407,40 +414,44 @@ class Transform():
 
           return
 
-     def doubleRecipe(self, steps, ingredients, Timelist):
+     def doubleRecipe(self, steps, ingredients, Timelist):          
           for obj in steps:
-               token = nltk.word_tokenize(obj.text)
-               s = nltk.pos_tag(token)
+               text = remove_time(obj)
+               iobj = IngredientHelper({})
+               token = nltk.word_tokenize(text)
                method = obj.method # avoid changing the temperature in preheating stage
                if method != "preheat" and method != 'Preheat':
-                    for i in range(len(s)):
-                         if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                              try:
-                                   token[i] = str(2 * int(token[i]))
-                              except:
-                                   token[i] = str(2 * handleFraction(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token)
+                    _ = iobj.find_number_and_units(token, [])
+                    wordMap = iobj.wordReplacement
+                    for word, replacement in wordMap.items():
+                         try: float(replacement)
+                         except: replacement = handleFraction(replacement)
+                         replacement = float(replacement)*2
+                         if int(replacement) == replacement: replacement = int(replacement)
+                         textNew = text.replace(word, str(replacement))
+                         obj.text = obj.text.replace(text, " "+textNew+" ")
+               
     
           for obj in ingredients:
-               token = nltk.word_tokenize(obj.text)
-               s = nltk.pos_tag(token)
-               for i in range(len(s)):
-                    if s[i][1] == 'CD' and checkTheIndexofNumtoChange(obj.text, i, Timelist=Timelist):
-                         try:
-                              token[i] = str(2 * int(token[i]))
-                         except:
-                              token[i] = str(2 * handleFraction(token[i]))
-               obj.text = TreebankWordDetokenizer().detokenize(token) 
+               inner = re.search("(\((.)*\))", obj.text)
+               text = re.sub("(\((.)*\))", "[MASK]", obj.text)
+               iobj = IngredientHelper({})
+               token = nltk.word_tokenize(text)
+               _ = iobj.find_number_and_units(token, [])
+               wordMap = iobj.wordReplacement
+               for word, replacement in wordMap.items():
+                    try: float(replacement)
+                    except: replacement = handleFraction(replacement)
+                    replacement = float(replacement)*2
+                    if int(replacement) == replacement: replacement = int(replacement)
+                    if inner != None:
+                         text = text.replace("[MASK]", inner[0])
+                    obj.text = text.replace(word, str(replacement))
+
           return (ingredients, steps)
 
 
      def changeIngredients(self, steps, ingredients, Timelist, ratio):
-          def remove_time(obj):
-               text = obj.text
-               time = obj.time
-               if time != None:
-                    text = text.replace(time, '')
-               return text
           for obj in steps:
                text = remove_time(obj) 
                token = nltk.word_tokenize(text)

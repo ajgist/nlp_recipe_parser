@@ -92,6 +92,10 @@ class StepHelper():
 
 #---------------------------------helper functions to find ingredients and qty--------------------------#
 class IngredientHelper():
+     def __init__(self, wordReplacement = {}):
+          self.wordReplacement = wordReplacement
+          
+
      def find_name(self, iArr, measurements, ingredient_stopwords):
         # iArr = tokenized array 
         ingredient = ""
@@ -174,20 +178,7 @@ class IngredientHelper():
           #if measurement word isn't found, search for any numbers in order
           if index == -1:
                for word in iArr:
-                    isFloat = False
-                    try:
-                         float(word)
-                         isFloat = True
-                    except ValueError:
-                         isFloat = False
-
-                    if word.isnumeric() or isFloat: numArr.append(word)
-
-          #search for numbers directly left of measurement keyword
-          else:
-               stopIndex = -1
-               for i in range(index-1, -1, -1):
-                    word = iArr[i]
+                    temp = word
                     isFloat = False
                     try:
                          float(word)
@@ -200,7 +191,31 @@ class IngredientHelper():
                          else:
                               isFloat = False
 
-                    if word.isnumeric() or isFloat: numArr.insert(0, word)
+                    if word.isnumeric() or isFloat:
+                         self.wordReplacement[temp] = word
+                         numArr.append(word)
+
+          #search for numbers directly left of measurement keyword
+          else:
+               stopIndex = -1
+               for i in range(index-1, -1, -1):
+                    word = iArr[i]
+                    temp = word
+                    isFloat = False
+                    try:
+                         float(word)
+                         isFloat = True
+                    except ValueError:
+                         nums = re.search("(\d+)/(\d+)", word)
+                         if nums != None: 
+                              word = str(int(nums[1])/int(nums[2]))
+                              isFloat = True
+                         else:
+                              isFloat = False
+
+                    if word.isnumeric() or isFloat: 
+                         self.wordReplacement[temp] = word
+                         numArr.insert(0, word)
                     else: 
                          stopIndex = i
                          break
@@ -215,7 +230,12 @@ class IngredientHelper():
                               float(word)
                               isFloat = True
                          except ValueError:
-                              isFloat = False
+                              nums = re.search("(\d+)/(\d+)", word)
+                              if nums != None: 
+                                   word = str(int(nums[1])/int(nums[2]))
+                                   isFloat = True
+                              else:
+                                   isFloat = False
                          if word.isnumeric() or isFloat: multArr.insert(0, word)
                          multiplier = self.arrayToNum(multArr)
           sum = self.arrayToNum(numArr)
